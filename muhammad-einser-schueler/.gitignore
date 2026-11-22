@@ -5,3 +5,7 @@ scratch/
 out/*
 !out/approval/
 out/approval/both.jpg
+!out/muhammad.mp4
+!out/contact-sheet.jpg
+!out/final-check.jpg
+!out/score.wav

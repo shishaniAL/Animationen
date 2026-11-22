@@ -58,7 +58,7 @@ export const SHOTS = [
   // 3 — "Sein Name war Khamzat." snap zoom + name tag
   {
     id: 3, dur: 2.6, text: 'Sein Name war *Khamzat.*', music: 'drop',
-    sfx: [{ t: 0.62, n: 'zoom' }, { t: 0.85, n: 'bass' }],
+    sfx: [{ t: 0.95, n: 'zoom' }, { t: 1.18, n: 'bass' }],
     frame(C, t, d) {
       C.light('day', [6, 0, -3], 18);
       const kz = lerp(-5.4, -3.4, easeOut(seg(t, 0, 0.55)));
@@ -69,17 +69,17 @@ export const SHOTS = [
       const B = C.cast.boys;
       [[2.4, -1.6], [2.6, 1.2], [9.4, -0.8]].forEach(([x, z], i) => { C.show(B[i], x, z, 0, i < 2 ? 0.05 : SW); C.face(B[i], 6, kz); B[i].face('scared'); B[i].armL.rotation.x = B[i].armR.rotation.x = -0.6; });
       C.put(C.props.hedge, 10.4, 0, 0.4, 0, PI / 2, 0);
-      const z = easeInOut(seg(t, 0.6, 0.85));
+      const z = easeInOut(seg(t, 0.95, 1.2));
       C.camLerp(z, [6.0, 2.0, 3.2, 6.0, 2.2, -3.4, 50], [6.0, 2.62, -0.9, 6.0, 2.56, -3.4, 50]);
-      C.ov.nameTag = seg(t, 0.82, 1.2);
-      C.ov.flash = t > 0.82 && t < 0.95 ? 0.5 * (1 - seg(t, 0.82, 0.95)) : 0;
-      if (t > 0.82) { C.ov.shakeX = noise1(t * 30, 1) * 0.02 * (1 - seg(t, 0.82, 1.3)); C.ov.shakeY = noise1(t * 30, 2) * 0.02 * (1 - seg(t, 0.82, 1.3)); }
+      C.ov.nameTag = seg(t, 1.18, 1.55);
+      C.ov.flash = t > 1.18 && t < 1.31 ? 0.5 * (1 - seg(t, 1.18, 1.31)) : 0;
+      if (t > 1.18) { C.ov.shakeX = noise1(t * 30, 1) * 0.02 * (1 - seg(t, 1.18, 1.66)); C.ov.shakeY = noise1(t * 30, 2) * 0.02 * (1 - seg(t, 1.18, 1.66)); }
     },
   },
   // 4 — punching bag flies off its chain
   {
     id: 4, dur: 2.4, text: 'Khamzat war *MMA-Kämpfer.*',
-    sfx: [{ t: 0.72, n: 'punch' }, { t: 0.78, n: 'whoosh' }],
+    sfx: [{ t: 0.9, n: 'punch' }, { t: 0.96, n: 'whoosh' }],
     frame(C, t, d) {
       const [bx, bz] = PARK.bag;
       C.light('day', [bx, 0, bz], 16);
@@ -88,18 +88,18 @@ export const SHOTS = [
       const k = C.show(C.cast.k, bx - 1.2, bz, PI / 2, 0);
       k.legL.rotation.x = -0.3; k.legR.rotation.x = 0.25;
       k.armL.rotation.x = -1.2; k.armR.rotation.x = -1.0; k.armL.rotation.z = 0.25; k.armR.rotation.z = -0.25;
-      const jab = t < 0.55 ? 0 : t < 0.72 ? easeIn(seg(t, 0.55, 0.72)) : 1 - easeOut(seg(t, 0.85, 1.3));
+      const jab = t < 0.73 ? 0 : t < 0.9 ? easeIn(seg(t, 0.73, 0.9)) : 1 - easeOut(seg(t, 1.03, 1.48));
       k.armR.rotation.x = lerp(-1.0, -1.6, jab); k.armR.rotation.z = lerp(-0.25, 0.12, jab); k.torso.rotation.y = lerp(0, 0.35, jab);
-      k.face(t > 0.55 ? 'angry' : 'serious');
+      k.face(t > 0.73 ? 'angry' : 'serious');
       // bag: swings slightly before, then flies off along +x world (= local +z)
-      if (t < 0.72) { P.pivot.rotation.x = Math.sin(t * 3) * 0.05; }
+      if (t < 0.9) { P.pivot.rotation.x = Math.sin(t * 3) * 0.05; }
       else {
-        const ft = t - 0.72;
+        const ft = t - 0.9;
         P.bag.position.set(ft * 9, -1.9 + ft * 4.2 - ft * ft * 3.2, 0);
         P.bag.rotation.z = -ft * 7;
       }
-      if (t > 0.7 && t < 0.95) { const s = 1.4 + seg(t, 0.7, 0.95) * 1.6; C.put(C.props.star, bx + 0.6, 2.3, bz, 0, 0, 0); C.props.star.scale.set(s, s, 1); C.props.star.material.opacity = 1 - seg(t, 0.85, 0.95); }
-      C.ov.shakeX = t > 0.72 && t < 1.0 ? noise1(t * 40, 3) * 0.08 : 0;
+      if (t > 0.88 && t < 1.13) { const s = 1.4 + seg(t, 0.88, 1.13) * 1.6; C.put(C.props.star, bx + 0.6, 2.3, bz, 0, 0, 0); C.props.star.scale.set(s, s, 1); C.props.star.material.opacity = 1 - seg(t, 1.03, 1.13); }
+      C.ov.shakeX = t > 0.9 && t < 1.18 ? noise1(t * 40, 3) * 0.08 : 0;
       C.camLerp(easeOut(t / d), [bx + 0.6, 2.3, bz + 7.2, bx - 0.4, 2.2, bz, 50], [bx + 0.4, 2.3, bz + 6.4, bx - 0.3, 2.2, bz, 50]);
     },
   },
@@ -167,11 +167,11 @@ export const SHOTS = [
   // 8 — respect: watering the street, salute, dog sits
   {
     id: 8, dur: 3.8, text: 'Die Leute hatten so viel *Respekt* vor ihm,',
-    sfx: [{ t: 0.1, n: 'water' }, { t: 1.35, n: 'salute' }, { t: 2.6, n: 'whimper' }],
+    sfx: [{ t: 0.05, n: 'water' }, { t: 0.85, n: 'salute' }, { t: 1.65, n: 'whimper' }],
     frame(C, t, d) {
       C.light('day', [-5, 0, -30], 20);
-      const cut = t < 1.27 ? 0 : t < 2.54 ? 1 : 2;
-      const lt = t - cut * 1.27;
+      const cl = d / 3; const cut = Math.min(2, Math.floor(t / cl));
+      const lt = t - cut * cl;
       const k = C.cast.k;
       if (cut === 0) {
         const o = C.show(C.cast.oma, -6, -30, 0.75, SW); o.face('scared');
@@ -235,30 +235,30 @@ export const SHOTS = [
       b.armL.rotation.x = -1.3 * Math.sin(seg(t, 0.3, 1.4) * PI);
       const bow = easeInOut(seg(t, 1.6, 2.2));
       b.torso.rotation.x = 0.55 * bow; b.armR.rotation.x = lerp(0, -1.2, bow); b.armR.rotation.z = lerp(0, 0.9, bow); b.armR.rotation.y = 0;
-      if (t < 3.6) talk(b, t, 'talk', 'smile'); else b.face('smile');
+      if (t > 0.15 && t < 3.25) talk(b, t, 'talk', 'smile'); else b.face('smile');
       C.camLerp(t / d, [X + 2.0, 3.0, 9.4, X + 3.0, 3.2, 1.6, 50], [X + 2.1, 3.1, 8.6, X + 3.1, 3.3, 1.6, 50]);
     },
   },
   // 11 — "Ich gehe nicht feiern. Ich gehe schlafen."
   {
     id: 11, dur: 3.6, text: '„Ich gehe nicht feiern. Ich gehe *schlafen.*“', music: 'club',
-    sfx: [{ t: 2.45, n: 'record' }],
+    sfx: [{ t: 3.95, n: 'record' }],
     frame(C, t, d) {
       const X = CLUB.x;
       C.light('night', [X, 0, 3], 14);
       const b = C.show(C.cast.bouncer, X + 3.4, 1.4, 0, SW);
       C.club.rope.rotation.y = -1.45; const P = { x: -2.6, z: 2.2 }; const cosA = Math.cos(-1.45), sinA = Math.sin(-1.45);
       C.club.rope.position.set(P.x - (cosA * P.x + sinA * P.z), 0, P.z - (-sinA * P.x + cosA * P.z));
-      if (t < 2.4) {
+      if (t < 2.85) {
         const k = C.show(C.cast.kpj, X - 1.0, 3.6, PI / 2 - 0.5, SW);
         C.hold(k, C.props.pillow, 'L', 0, 0.35, 0.05, 0, 0, PI / 2); k.armL.rotation.z = 0.25;
-        if (t > 0.2 && t < 2.2) talk(k, t, 'ktalk', 'blank'); else k.face('blank');
+        if (t > 1.75 && t < 2.75) talk(k, t, 'ktalk', 'blank'); else k.face('blank');
         k.idle(t);
         b.torso.rotation.x = 0.5; b.armR.rotation.x = -1.2; b.armR.rotation.z = 0.9; b.face('smile'); C.face(b, X - 1.0, 3.6);
         const hp = C.headPos(k);
         C.cam([hp.x + 2.4, hp.y + 0.15, hp.z + 2.0], [hp.x, hp.y - 0.1, hp.z], 42);
       } else {
-        const lt = t - 2.4;
+        const lt = t - 2.85;
         const kx = X - 1.0 + lt * 2.1;
         const k = C.show(C.cast.kpj, kx, 3.9, PI / 2, SW); k.walk(lt * 7.5);
         C.hold(k, C.props.pillow, 'L', 0, 0.35, 0.05, 0, 0, PI / 2); k.armL.rotation.z = 0.25;
@@ -282,7 +282,6 @@ export const SHOTS = [
       if (j > 0 && j < 1) { ty.armL.rotation.z = -1.3; ty.armR.rotation.z = 1.3; ty.legL.rotation.x = -0.6; }
       if (t > 1.5) { ty.armL.rotation.z = -0.4; ty.armR.rotation.x = -0.4; ty.armR.rotation.z = 0.4; const sq = 1 - 0.12 * Math.sin(seg(t, 1.5, 1.75) * PI); ty.body.scale.set(1 / sq, sq, 1 / sq); }
       ty.face('smirk');
-      if (t > 1.7 && t < 3.5) talk(ty, t, 'talk', 'smirk');
       C.cam([x + 0.9, 3.0, kzt - 3.4], [x - 0.2, 2.3, kz + 2.0], 50);
     },
   },
@@ -304,15 +303,15 @@ export const SHOTS = [
   // 14 — slow sip of the energy drink
   {
     id: 14, dur: 4.0, text: 'Khamzat schaute ihn an, nahm einen *Schluck* von seinem Energy-Drink',
-    sfx: [{ t: 1.7, n: 'slurp' }],
+    sfx: [{ t: 2.55, n: 'slurp' }],
     frame(C, t, d) {
       const { x, kz } = ENC;
       C.light('day', [x, 0, kz], 14);
       const k = C.show(C.cast.k, x, kz, 0, SW);
       const ty = C.show(C.cast.typ, x, kz + 2.0, PI, SW); ty.face('smirk');
-      const lift = easeInOut(seg(t, 1.1, 1.7)) * (1 - easeInOut(seg(t, 3.3, 3.9)));
+      const lift = easeInOut(seg(t, 2.0, 2.6)) * (1 - easeInOut(seg(t, 3.9, 4.5)));
       k.armR.rotation.x = lerp(0, -2.0, lift); k.armR.rotation.z = lerp(0, -0.75, lift);
-      k.neck.rotation.x = -0.28 * easeInOut(seg(t, 1.6, 2.2)) * (1 - easeInOut(seg(t, 3.1, 3.6)));
+      k.neck.rotation.x = -0.28 * easeInOut(seg(t, 2.5, 3.0)) * (1 - easeInOut(seg(t, 3.8, 4.3)));
       C.hold(k, C.props.can, 'R', 0, -0.05, 0.12);
       k.face('serious');
       const hp = C.headPos(k);
@@ -322,15 +321,15 @@ export const SHOTS = [
   // 15 — "Bruder, ich hab heute frei."
   {
     id: 15, dur: 3.0, text: 'und sagte: „Bruder, ich hab heute *frei.*“',
-    sfx: [{ t: 2.0, n: 'bass' }],
+    sfx: [{ t: 1.45, n: 'bass' }],
     frame(C, t, d) {
       const { x, kz } = ENC;
       C.light('day', [x, 0, kz], 14);
       const k = C.show(C.cast.k, x, kz, 0, SW); C.hold(k, C.props.can, 'R', 0, -0.05, 0.12);
       const ty = C.show(C.cast.typ, x, kz + 2.0, PI, SW);
-      if (t > 0.8 && t < 2.4) talk(k, t, 'ktalk', 'serious', 6); else k.face('serious');
+      if (t > 0.2 && t < 1.8) talk(k, t, 'ktalk', 'serious', 6); else k.face('serious');
       const hp = C.headPos(k);
-      const z = easeOut(seg(t, 2.0, 2.3));
+      const z = easeOut(seg(t, 1.45, 1.75));
       C.camLerp(z, [hp.x + 0.1, hp.y, hp.z + 1.5, hp.x, hp.y - 0.05, hp.z, 44], [hp.x + 0.05, hp.y, hp.z + 1.05, hp.x, hp.y - 0.02, hp.z, 44]);
     },
   },
@@ -352,7 +351,7 @@ export const SHOTS = [
   // 17 — five seconds later... silence, can crushed
   {
     id: 17, dur: 2.8, text: 'Fünf Sekunden *später…*', music: 'silence', capY: 0.76,
-    sfx: [{ t: 0.6, n: 'crush' }, { t: 2.0, n: 'heartbeat' }],
+    sfx: [{ t: 1.0, n: 'crush' }, { t: 1.85, n: 'heartbeat' }],
     frame(C, t, d) {
       const { x, kz } = ENC;
       C.light('day', [x, 0, kz], 14);
@@ -360,7 +359,7 @@ export const SHOTS = [
       const ty = C.show(C.cast.typ, x, kz + 2.0, PI, SW); ty.face('shock');
       k.armR.rotation.x = -1.25; k.armR.rotation.z = 0.25;
       C.hold(k, C.props.can, 'R', 0, -0.05, 0.12);
-      const cr = easeInOut(seg(t, 0.55, 1.7));
+      const cr = easeInOut(seg(t, 1.0, 1.72));
       C.props.can.userData.body.scale.set(1 + cr * 0.25, 1 - cr * 0.62, 1 + cr * 0.25);
       C.props.can.children[1].position.y = 0.225 * (1 - cr * 0.62);
       C.props.can.rotation.z = cr * 0.25;
@@ -371,7 +370,7 @@ export const SHOTS = [
         C.cam([hand.x + 0.5, hand.y + 0.25, hand.z + 1.5], [hand.x, hand.y, hand.z], 40);
       } else {
         const hp = C.headPos(k);
-        const z = easeOut(seg(t, 1.75, 2.8));
+        const z = easeOut(seg(t, 1.75, 2.47));
         C.camLerp(z, [hp.x, hp.y + 0.08, hp.z + 1.7, hp.x, hp.y + 0.08, hp.z, 36], [hp.x, hp.y + 0.1, hp.z + 1.25, hp.x, hp.y + 0.1, hp.z, 30]);
       }
     },
@@ -379,11 +378,11 @@ export const SHOTS = [
   // 18 — apologising for things he hasn't done yet
   {
     id: 18, dur: 5.2, text: '…*entschuldigte* er sich für Dinge, die er *noch gar nicht gemacht* hatte.', music: 'groove2',
-    sfx: [{ t: 0, n: 'hit' }, { t: 1.3, n: 'whoosh' }, { t: 2.6, n: 'whoosh' }, { t: 3.9, n: 'whoosh' }],
+    sfx: [{ t: 0, n: 'hit' }, { t: 1.02, n: 'whoosh' }, { t: 2.04, n: 'whoosh' }, { t: 3.06, n: 'whoosh' }],
     frame(C, t, d) {
       const { x, kz } = ENC;
       C.light('day', [x, 0, kz + 3], 18);
-      const cut = Math.min(3, Math.floor(t / 1.3)); const lt = t - cut * 1.3;
+      const cl = d / 4; const cut = Math.min(3, Math.floor(t / cl)); const lt = t - cut * cl;
       const k = C.cast.k, ty = C.cast.typ;
       if (cut === 0) { // polishing shoes
         C.show(k, x, kz, 0, SW); k.face('serious');
@@ -515,7 +514,7 @@ export const SHOTS = [
   },
   // 24 — "Ihr habt nichts gesehen."
   {
-    id: 24, dur: 2.6, text: '*Ihr habt nichts gesehen.*', whole: true, capStart: 0.55, capEnd: 0.0, music: 'sting',
+    id: 24, dur: 2.6, text: '*Ihr habt nichts gesehen.*', whole: true, capY: 0.74, capStart: 0.55, capEnd: 0.0, music: 'sting',
     sfx: [{ t: 0.45, n: 'zoom' }, { t: 0.55, n: 'bass' }],
     frame(C, t, d) {
       const X = KITCHEN.x, Z = KITCHEN.z;

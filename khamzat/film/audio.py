@@ -1,5 +1,5 @@
 """Score + sound effects for KHAMZAT, synthesised deterministically from the timeline.
-Usage: python3 audio.py out/timeline.json out/audio.wav
+Usage: python3 audio.py out/timeline.json out/audio.wav [narration.mp3]
 """
 import json, sys, wave
 import numpy as np
@@ -223,25 +223,35 @@ def score(total, secs):
             buf[T(st) + T(0.04): T(en)] = 0
     return buf
 
-def main(tl_path, out_path):
+def main(tl_path, out_path, narr_path=None):
     tlj = json.load(open(tl_path)); total = tlj['total']; shots = tlj['timeline']
     start = {s['id']: s['start'] for s in shots}
-    secs = [(0, 'intro'), (start[3] + 0.85, 'groove'), (start[9], 'club'), (start[12], 'groove'), (start[17], 'silence'),
+    secs = [(0, 'intro'), (start[3] + 1.18, 'groove'), (start[9], 'club'), (start[12], 'groove'), (start[17], 'silence'),
             (start[18], 'groove2'), (start[20], 'soft'), (start[22], 'silence'), (start[24] + 0.55, 'sting')]
     mus = score(total, secs)
     # sting: a final stab + bass
     st = start[24] + 0.55
     add(mus, stab([nf('D3'), nf('F3'), nf('A3'), nf('D4')], 0.8), st, 0.7)
     # "frei" drop: drums vanish for a beat after the bass hit in shot 15
-    i0, i1 = T(start[15] + 2.0), T(start[15] + 2.9)
+    i0, i1 = T(start[15] + 1.45), T(start[15] + 2.2)
     mus[i0:i1] *= np.linspace(0.15, 1, i1 - i0)
     sfx = np.zeros_like(mus)
     for s in shots:
         for c in s['sfx']:
             x = fx(c['n']); add(sfx, norm(x, 1.0), s['start'] + c['t'], FX_GAIN[c['n']])
-    # gentle ducking of music under effects
-    env = lp(np.abs(sfx), 8, 1); duck = 1 - 0.45 * np.clip(env / 0.15, 0, 1)
-    mix = mus * 0.6 * duck + sfx
+    voice = np.zeros_like(mus)
+    if narr_path:
+        import subprocess
+        raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', narr_path, '-ac', '1', '-ar', str(SR), '-f', 's16le', '-'], capture_output=True, check=True).stdout
+        v = np.frombuffer(raw, dtype='<i2').astype(float) / 32768
+        cut = T(49.21)  # insert the dramatic pause after "später"
+        v = np.concatenate([v[:cut], np.zeros(T(1.4)), v[cut:]])
+        v = norm(v, 0.9)
+        voice[:min(len(v), len(voice))] = v[:len(voice)]
+    # ducking: music sits under the voice and the effects
+    venv = lp(np.abs(voice), 6, 1); fenv = lp(np.abs(sfx), 8, 1)
+    duck = (1 - 0.6 * np.clip(venv / 0.04, 0, 1)) * (1 - 0.35 * np.clip(fenv / 0.15, 0, 1))
+    mix = mus * 0.55 * duck + sfx * (0.85 if narr_path else 1.0) + voice
     mix = hp(mix, 30)
     mix = np.tanh(mix * 1.1) * 0.95
     mix = mix[: T(total)]
@@ -252,4 +262,4 @@ def main(tl_path, out_path):
     print('wrote', out_path, total, 's')
 
 if __name__ == '__main__':
-    main(sys.argv[1], sys.argv[2])
+    main(sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else None)

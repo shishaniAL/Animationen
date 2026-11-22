@@ -2,6 +2,7 @@ import { THREE, clamp, lerp, easeOut, backOut, canvasTex, textTex, sphere, mat, 
 import { makeChar, makeDog, makePigeon, makeRooster } from './chars.js';
 import { buildTown, buildBedroom, buildKitchen, buildClub, makeCan, makeJar, makeBag, makePillow, makeBench, makePunchingBag, makeWateringCan, makeFan, makeCloth, makeBush, makeSkyTextures } from './world.js';
 import { SHOTS } from './shots.js';
+import { PHRASES, STARTS, END } from './narration.js';
 
 const W = 1080, H = 1920, FPS = 30;
 
@@ -170,9 +171,8 @@ async function init() {
   }
 
   // ---- timeline ----
-  let acc = 0;
-  const timeline = SHOTS.map((s) => { const o = { ...s, start: acc }; acc += s.dur; return o; });
-  const total = acc;
+  const timeline = SHOTS.map((s, i) => ({ ...s, start: STARTS[i], dur: (i + 1 < STARTS.length ? STARTS[i + 1] : END) - STARTS[i], phrases: PHRASES[s.id] || null }));
+  const total = END;
   const durationFrames = Math.round(total * FPS);
 
   // captions: split into chunks, '*' marks emphasis
@@ -187,7 +187,36 @@ async function init() {
     }
     return words;
   }
+  const syl = (w) => Math.max(1, (w.toLowerCase().replace(/[^a-zäöüß]/g, '').match(/(ei|ie|au|eu|äu|[aeiouäöüy])+/g) || []).length);
+  function groupWords(words) {
+    const groups = []; let cur = [];
+    for (const wd of words) {
+      const len = cur.reduce((a, b) => a + b.w.length + 1, 0) + wd.w.length;
+      if (cur.length && (cur.length >= 2 || len > 13 || cur[cur.length - 1].e !== wd.e)) { groups.push(cur); cur = []; }
+      cur.push(wd);
+      if (/[,.:!?…“]$/.test(wd.w)) { groups.push(cur); cur = []; }
+    }
+    if (cur.length) groups.push(cur);
+    return groups;
+  }
+  function narrChunks(shot) {
+    const out = [];
+    shot.phrases.forEach(([ps, pe, text], pi) => {
+      const groups = groupWords(parseWords(text));
+      const tot = groups.reduce((a, g) => a + g.reduce((b, w) => b + syl(w.w), 0) + 0.4 * (g.length - 1), 0) + 0.4 * (groups.length - 1);
+      let t = ps;
+      const next = pi + 1 < shot.phrases.length ? shot.phrases[pi + 1][0] : shot.start + shot.dur;
+      groups.forEach((g, gi) => {
+        const w = g.reduce((b, x) => b + syl(x.w), 0) + 0.4 * (g.length - 1) + (gi < groups.length - 1 ? 0.4 : 0);
+        const d = (pe - ps) * w / tot;
+        out.push({ words: g, a: t - shot.start, b: gi === groups.length - 1 ? Math.min(pe + 0.35, next) - shot.start : t + d - shot.start });
+        t += d;
+      });
+    });
+    return out;
+  }
   function chunks(shot) {
+    if (shot.phrases) return narrChunks(shot);
     if (!shot.text) return [];
     const words = parseWords(shot.text);
     const groups = [];

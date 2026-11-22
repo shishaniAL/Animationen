@@ -93,7 +93,7 @@ const makeMats = () => {
     chrome: new THREE.MeshPhysicalMaterial({ color: "#dfe4ea", metalness: 1, roughness: 0.18 }),
     darkChrome: new THREE.MeshPhysicalMaterial({ color: "#20242b", metalness: 0.7, roughness: 0.35 }),
     rubber: new THREE.MeshPhysicalMaterial({ color: "#1f1f22", roughness: 0.85 }),
-    seat: cloth("#c8a07a", "#ffe4c4", 0.7),
+    seat: cloth("#7a4632", "#e0a080", 0.6),
     glass: new THREE.MeshPhysicalMaterial({ color: "#cfe3f5", roughness: 0.05, transmission: 0, transparent: true, opacity: 0.28, clearcoat: 1 }),
     head: new THREE.MeshStandardMaterial({ color: "#ffffff", emissive: "#e8f2ff", emissiveIntensity: 0 }),
     tail: new THREE.MeshStandardMaterial({ color: "#7a1010", emissive: "#ff2a2a", emissiveIntensity: 0.6 }),
@@ -169,7 +169,7 @@ const buildCar = (M: Mats, GLOW: THREE.Texture) => {
   mesh(new RoundedBoxGeometry(0.75, 0.24, 1.12, 5, 0.1), M.paint, sprung, -1.0, 0.76, 0);
   for (const s of [-1, 1]) mesh(new RoundedBoxGeometry(0.9, 0.14, 0.1, 3, 0.05), M.paint, sprung, -0.2, 0.78, s * 0.55);
   // cabin: seats, wheel, a raked windscreen
-  for (const s of [-1, 1]) { const b = mesh(blob(0.2, 80 + s, 0.05), M.seat, sprung, -0.48, 0.92, s * 0.25); b.scale.set(0.5, 1.2, 1.05); const c = mesh(blob(0.2, 82 + s, 0.05), M.seat, sprung, -0.25, 0.7, s * 0.25); c.scale.set(1.1, 0.4, 1.05); }
+  for (const s of [-1, 1]) { const b = mesh(new RoundedBoxGeometry(0.12, 0.4, 0.36, 4, 0.05), M.seat, sprung, -0.5, 0.88, s * 0.25); b.rotation.z = 0.18; const hr = mesh(new RoundedBoxGeometry(0.1, 0.12, 0.2, 3, 0.04), M.seat, sprung, -0.56, 1.12, s * 0.25); hr.rotation.z = 0.18; const c = mesh(new RoundedBoxGeometry(0.38, 0.1, 0.36, 3, 0.04), M.seat, sprung, -0.3, 0.7, s * 0.25); void c; }
   const wheel = mesh(new THREE.TorusGeometry(0.12, 0.018, 8, 24), M.darkChrome, sprung, 0.2, 0.92, 0.25); wheel.rotation.y = Math.PI / 2; wheel.rotation.x = 0.5;
   const ws = new THREE.Group(); ws.position.set(0.36, 0.84, 0); ws.rotation.z = 0.55; sprung.add(ws);
   mesh(new RoundedBoxGeometry(0.04, 0.42, 1.08, 2, 0.02), M.glass, ws, 0, 0.21, 0).castShadow = false;

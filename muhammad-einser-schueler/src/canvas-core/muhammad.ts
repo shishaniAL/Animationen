@@ -7,7 +7,7 @@
 import * as THREE from "three";
 import { rng, type Ctx, type Env } from "./core";
 import { Film } from "./film";
-import { setType } from "./kinetic";
+import { setType, setWidth } from "./kinetic";
 import { buildStage, type Stage } from "./muhammad/stage";
 import { score } from "./muhammad/music";
 
@@ -242,7 +242,7 @@ const shotJob = (S: Stage, t: number): Pose => {
   S.brief.rotation.set(lerp(0, 0.0, lift), lerp(Math.PI / 2, 0, lift), drop * 0 + (wind > 0 ? Math.sin(t * 60) * 0.02 * wind : 0));
   S.lid.rotation.x = (wind > 0 ? -Math.abs(Math.sin(t * 40)) * 0.12 * wind : 0) - (pop ? cl(settle(4.0, t, 8, 18), 0, 1.15) * 1.95 : 0);
   // coins: a fountain from the open case, piling up around it
-  const src = (tl: number) => { const d = ss(4.08, 4.42, tl), b = side.clone().lerp(front, 1).lerp(ground, d); return new THREE.Vector3(p.x + b.x, b.y + 0.45, p.z + b.z); };
+  const src = (tl: number) => { const d = ss(4.08, 4.42, tl), b = side.clone().lerp(front, 1).lerp(ground, d); return new THREE.Vector3(p.x + b.x + 0.25, b.y + 0.45, p.z + b.z + 0.35); };
   coinsAt(S, t, src, 4.0, new THREE.Vector3(p.x - 0.62, 0, p.z + 0.5));
   return p;
 };
@@ -259,7 +259,7 @@ const HEAP2 = new THREE.Vector3(-1.25, 0, -1.5);
 const goldPile = (S: Stage) => coinsAt(S, 99, () => HEAP2.clone().setY(1), 0, HEAP2);
 
 const shotAuto = (S: Stage, t: number): Pose => {
-  const p = base(); p.age = 1; p.x = -0.52; p.z = 0.85; goldPile(S);
+  const p = base(); p.age = 1; p.x = -0.4; p.z = 0.85; goldPile(S);
   const reach = ss(1.4, 2.3, t), wind = ss(2.45, 3.9, t) * (1 - ramp(3.95, 4.02, t)), yank = eo(3.98, 4.3, t), jump = t > 4.12 && t < 4.6;
   p.ry = lerp(0.25, 0.95, reach) * (1 - ss(4.6, 5.4, t)) + ss(4.6, 5.4, t) * 0.35;
   p.lean = -wind * 0.35 + yank * 0.1 * (1 - ss(4.3, 4.6, t));
@@ -271,7 +271,7 @@ const shotAuto = (S: Stage, t: number): Pose => {
   p.armL = mixArm(mixArm(mixArm(ready, grab, reach), { z: 0.1, x: 0.9, el: -0.6 }, wind), up, yank);
   p.armR = mixArm(mixArm(mixArm({ ...ready, x: 1.0 - rub }, grab, reach), { z: 0.1, x: 0.9, el: -0.6 }, wind), up, yank);
   const pres = ss(4.9, 5.4, t); p.armL = mixArm(p.armL, present, pres); p.armR = mixArm(p.armR, { z: 0.3, x: 0.1, el: -0.4 }, pres);
-  p.headY = lerp(-0.25, 0.1, reach) * (1 - pres) - pres * 0.35; p.headX = lerp(0, 0.1, wind) - yank * 0.15 + pres * 0.1;
+  p.headY = lerp(-0.25, 0.1, reach) * (1 - pres) - pres * 0.35 - 0.75 * ss(4.1, 4.4, t) * (1 - pres); p.twist = -0.3 * ss(4.1, 4.4, t) * (1 - pres); p.headX = lerp(0, 0.1, wind) - yank * 0.15 + pres * 0.1;
   p.look = [lerp(-0.8, 0.5, reach) * (1 - yank), 0];
   p.joy = 0.5 * (1 - wind) + ss(4.15, 4.4, t) * 0.5; p.worry = wind * 0.3; p.surprise = ss(4.05, 4.25, t) * (1 - ss(4.5, 4.9, t));
   p.blink = blinkAt(t, [0.6, 2.2, 5.7]);
@@ -297,7 +297,7 @@ const shotFahrt = (S: Stage, t: number): Pose => {
   const p = base(); p.age = 1; p.sit = true; goldPile(S);
   S.heap.visible = true; S.heap.position.set(-1.2, 0.05, -0.4); S.heap.scale.set(1.3, 0.55, 1.0); S.heap.rotation.set(0, 0, 0);
   const wind = ss(1.25, 1.95, t) * (1 - ramp(1.98, 2.05, t)), go = t > 2.0 ? t - 2.0 : 0;
-  const ry = lerp(-0.85, -0.18, ss(1.9, 2.9, t)), x = 0.12 + 0.9 * go + 2.6 * go * go, z = 0.0 + go * 0.15;
+  const ry = lerp(-0.85, -0.18, ss(1.9, 2.9, t)), x = 0.12 + 0.3 * go + 0.25 * go * go, z = 0.0 + go * 0.15;
   const squat = -wind * 0.05 + (t > 2.0 ? ring(2.0, t, 4, 10) * 0.06 : 0), pitch = wind * 0.05 + (t > 2.0 ? ring(2.0, t, 3.5, 9) * 0.09 : 0);
   placeCar(S, x, z, ry, squat + Math.sin(t * 30) * 0.004, pitch, 0, (x - 0.12) / (0.31 * CS), 1 + Math.sin(t * Math.PI * 4) * 0.05 * (1 - wind));
   // he rides in the driver's seat: placed in the car's frame
@@ -311,7 +311,7 @@ const shotFahrt = (S: Stage, t: number): Pose => {
   p.joy = 0.8 + ss(2.0, 2.2, t) * 0.2; p.surprise = 0; p.look = [-0.6, 0];
   p.blink = blinkAt(t, [0.9, 3.0]);
   if (t > 2.0) { // dust puffs from the rear wheels as he pulls away
-    const r = rng(41); S.puffs.forEach((pf, i) => { const born = 2.0 + i * 0.09, k = t - born; if (k < 0 || k > 1.3) return; const bx = 0.12 + 0.9 * (born - 2) + 2.6 * (born - 2) ** 2 - 0.9;
+    const r = rng(41); S.puffs.forEach((pf, i) => { const born = 2.0 + i * 0.09, k = t - born; if (k < 0 || k > 1.3) return; const bx = 0.12 + 0.3 * (born - 2) + 0.25 * (born - 2) ** 2 - 0.9;
       pf.visible = true; pf.position.set(bx - k * 0.4 + r() * 0.2, 0.15 + k * 0.35, z + 0.5 + (r() - 0.5) * 0.4); pf.scale.setScalar((0.5 + r() * 0.6) * ss(0, 0.15, k) * (1 - ss(0.5, 1.3, k)) * 1.3); });
   }
   return p;
@@ -336,7 +336,8 @@ export const poseFrame = (S: Stage, id: keyof typeof CUES, local: number, frame:
 const caption = (ctx: Ctx, env: Env, id: keyof typeof CUES, t: number) => {
   const lines = CAPTIONS[id], size = 76, font = (w: number, px: number) => `${w} ${px}px "Inter", "DejaVu Sans", sans-serif`;
   ctx.save(); ctx.shadowColor = "rgba(12, 22, 44, 0.55)"; ctx.shadowBlur = 22 * env.scale; ctx.shadowOffsetY = 4 * env.scale;
-  lines.forEach((ln, i) => setType(ctx, env, ln, 540, 250 + i * 92, size, ramp(0.15 + i * 0.18, 0.75 + i * 0.18, t), { color: i ? "#ffffff" : "#fff3d6", align: "center", weight: i ? 800 : 600, font }));
+  const fit = Math.min(...lines.map((ln, i) => 740 / setWidth(ctx, ln, size, { weight: i ? 800 : 600, font })), 1);
+  lines.forEach((ln, i) => setType(ctx, env, ln, 540, 250 + i * 92, size * fit, ramp(0.15 + i * 0.18, 0.75 + i * 0.18, t), { color: i ? "#ffffff" : "#fff3d6", align: "center", weight: i ? 800 : 600, font }));
   ctx.restore();
 };
 

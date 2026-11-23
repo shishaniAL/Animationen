@@ -305,7 +305,7 @@ def main(tl_path, out_path, narr_path=None):
         if m in ('intro', 'groove', 'groove2', 'club', 'soft', 'tension'): secs.append((st0, m))
         elif m in ('silence', 'stop'): secs.append((st0, 'silence'))
         elif m == 'hype': secs.append((st0, 'groove2'))
-        elif m == 'drop': secs.append((st0, 'tension')); secs.append((st0 + 0.55, 'groove2'))
+        elif m == 'drop': secs.append((st0, 'tension')); secs.append((st0 + 1.2, 'groove2'))
         elif m == 'sting': secs.append((st0, 'silence')); secs.append((st0 + 1.4, 'groove2'))
     mus = score(total, secs)
     sfx = np.zeros_like(mus)

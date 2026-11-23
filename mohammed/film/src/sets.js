@@ -30,7 +30,7 @@ export function makeScreen(w = 512, h = 288) {
   const bush = (x, y, s) => { ctx.fillStyle = '#2f8a2f'; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(x + (i - 1) * 22 * s, y - (i === 1 ? 10 : 0) * s, 26 * s, 0, 7); ctx.fill(); } };
   const stone = (x, y, s) => { ctx.fillStyle = '#8c8c94'; ctx.beginPath(); ctx.moveTo(x - 40 * s, y); ctx.lineTo(x - 26 * s, y - 34 * s); ctx.lineTo(x + 18 * s, y - 40 * s); ctx.lineTo(x + 42 * s, y); ctx.fill(); ctx.fillStyle = '#a8a8b0'; ctx.beginPath(); ctx.moveTo(x - 26 * s, y - 34 * s); ctx.lineTo(x + 18 * s, y - 40 * s); ctx.lineTo(x + 4 * s, y - 14 * s); ctx.fill(); };
   const big = (txt, y, size, col = '#ffd23f', stroke = '#5a2a00') => { ctx.font = `900 ${size}px Inter`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round'; ctx.lineWidth = size * 0.18; ctx.strokeStyle = stroke; ctx.strokeText(txt, w / 2, y); ctx.fillStyle = col; ctx.fillText(txt, w / 2, y); };
-  function draw(mode, t) {
+  function draw(mode, t, opt) {
     ctx.clearRect(0, 0, w, h);
     if (mode === 'off') { ctx.fillStyle = '#050608'; ctx.fillRect(0, 0, w, h); }
     else if (mode === 'title') {
@@ -40,7 +40,7 @@ export function makeScreen(w = 512, h = 288) {
       big('TOKEN EVENT', h * 0.84, 44);
     } else if (mode === 'map') { // the boy knows every bush and stone
       island(t, 1, t);
-      const k = Math.floor(t * 2.2) % 3;
+      const k = opt ?? Math.floor(t * 2.2) % 3;
       if (k === 0) bush(w / 2, h * 0.75, 2.2); else if (k === 1) stone(w / 2, h * 0.82, 2.4); else { ctx.fillStyle = '#c98a4b'; ctx.fillRect(w * 0.3, h * 0.25, 40, h * 0.6); ctx.fillRect(w * 0.3, h * 0.25, w * 0.4, 30); }
       hud('TOKEN EVENT · Spieler: 1');
     } else if (mode === 'play') {

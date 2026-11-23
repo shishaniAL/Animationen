@@ -4,7 +4,7 @@ import { buildTown, buildKitchen, makeSkyTextures } from './world.js';
 import { makeScreen, buildRoom, buildLiving, makeFlies, makeConfetti, makeClock, makePizzaBox } from './sets.js';
 import { makePhoneScreen, makeWideScreen, makeSmartphone, makeLaptop, makeRouter, makeDiningChair, makeFries, makeBurger, makeDesk } from './screens.js';
 import { SHOTS } from './shots.js';
-import { PHRASES, STARTS, END } from './narration.js';
+import { PHRASES, STARTS, END, WORDS } from './narration.js';
 
 const W = 1080, H = 1920, FPS = 30;
 
@@ -193,7 +193,25 @@ async function init() {
     });
     return out;
   }
+  function wordChunks(shot) {
+    const ws = WORDS.filter((w) => w[4] === shot.id).map(([w, a, b, e]) => ({ w, e: !!e, a, b }));
+    const groups = []; let cur = [];
+    for (const wd of ws) {
+      const len = cur.reduce((x, y) => x + y.w.length + 1, 0) + wd.w.length;
+      if (cur.length && (cur.length >= 2 || len > 13 || cur[cur.length - 1].e !== wd.e || wd.a - cur[cur.length - 1].b > 0.35)) { groups.push(cur); cur = []; }
+      cur.push(wd);
+      if (/[,.:!?…”]$/.test(wd.w) || wd.w.endsWith('...')) { groups.push(cur); cur = []; }
+    }
+    if (cur.length) groups.push(cur);
+    return groups.map((g, i) => {
+      const a = g[0].a - shot.start - 0.04;
+      const nextA = i + 1 < groups.length ? groups[i + 1][0].a - shot.start - 0.04 : shot.dur;
+      const b = Math.min(nextA, g[g.length - 1].b - shot.start + 0.45);
+      return { words: g.map(({ w, e }) => ({ w, e })), a, b };
+    });
+  }
   function chunks(shot) {
+    if (WORDS && WORDS.length && !shot.whole) return wordChunks(shot);
     if (shot.phrases) return narrChunks(shot);
     if (!shot.text) return [];
     const words = parseWords(shot.text);

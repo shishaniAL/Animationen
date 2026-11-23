@@ -195,7 +195,8 @@ export const SHOTS = [
       const sl = C.put(C.props.slime, R.x - 1.6, 0, R.z + 1.6, 0, 0.6, 0);
       const sq = 1 + Math.sin(t * 5) * 0.06; C.props.slime.userData.body.scale.set(1.1 * sq, 0.75 / sq, 1 * sq);
       if (t < 2.3) {
-        C.cam([R.x + 6.4, 3.0, R.z + 3.4], [R.x + 4.4, 2.6, R.z + 2.0], 50);
+        C.fill.intensity = 16; C.fill.position.set(R.x + 3.0, 3.6, R.z + 1.2);
+        C.camLerp(easeInOut(t / 2.3), [R.x + 1.7, 2.9, R.z + 0.4, R.x + 4.6, 2.5, R.z + 2.0, 50], [R.x + 2.2, 2.85, R.z + 0.7, R.x + 4.6, 2.55, R.z + 2.0, 50]);
       } else {
         C.props.slime.userData.arm.rotation.z = -0.4 + Math.sin(t * 10) * 0.6;
         C.camLerp(easeOut(seg(t, 2.3, d)), [R.x - 0.2, 1.4, R.z + 4.2, R.x - 1.6, 0.6, R.z + 1.6, 46], [R.x - 0.6, 1.2, R.z + 3.6, R.x - 1.6, 0.6, R.z + 1.6, 46]);

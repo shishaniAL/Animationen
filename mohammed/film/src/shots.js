@@ -145,7 +145,7 @@ export const SHOTS = [
   { id: 10, dur: 3.4, text: '„Mama, ich kann nicht! *Der Token spawnt gleich!*“',
     frame(C, t, d) {
       C.light('indoorNight', [R.x + 2, 0, R.z], 10);
-      C.screenRoom.draw('play', t); C.room.tv.userData.light.intensity = 22;
+      C.screenRoom.draw('play', t); C.room.tv.userData.light.intensity = 9;
       const m = gamer(C, t, 'scream', 2);
       talk(m, t, 'scream', 'crazy', 6);
       const hp = C.headPos(m);
@@ -236,7 +236,7 @@ export const SHOTS = [
   { id: 17, dur: 3.2, text: 'Doch eines Nachts, um *3:47 Uhr,* passierte es.', music: 'tension', sfx: [{ t: 0.1, n: 'tick' }, { t: 1.1, n: 'tick' }, { t: 2.1, n: 'tick' }],
     frame(C, t, d) {
       C.light('indoorNight', [R.x, 0, R.z], 10); C.hemi.intensity = 0.25; C.room.lamp.intensity = 2;
-      C.screenRoom.draw('play', t); C.room.tv.userData.light.intensity = 26;
+      C.screenRoom.draw('play', t); C.room.tv.userData.light.intensity = 11;
       const m = gamer(C, t, 'blank', 0.3);
       C.put(C.props.clock, R.x + 0.5, 2.25, R.z - 4.2, 0, 0.35, 0); C.props.clock.userData.draw('3:47', Math.floor(t * 2) % 2 === 0);
       if (t < 1.4) C.cam([R.x + 0.8, 2.4, R.z - 2.9], [R.x + 0.5, 2.25, R.z - 4.2], 40);

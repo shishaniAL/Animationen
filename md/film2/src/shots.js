@@ -35,13 +35,13 @@ export const SHOTS = [
       const m = C.show(C.cast.md, 6, 4 + t * 1.3, 0, 0.22); m.walk(t * 7); m.face('smirk');
       const hp = C.headPos(m); C.camLerp(easeOut(t / d), [hp.x + 1.2, hp.y + 0.6, hp.z + 6, hp.x, hp.y - 0.6, hp.z, 50], [hp.x + 0.8, hp.y + 0.2, hp.z + 4.2, hp.x, hp.y - 0.6, hp.z, 50]);
     } },
-  { id: 2, dur: 2.6, text: 'Get the most *aura* in the whole town.', sfx: [{ t: 0.6, n: 'aura' }],
+  { id: 2, dur: 2.6, text: 'Get the most *aura* in the whole town.', sfx: [{ t: 0.87, n: 'aura' }],
     frame(C, t, d) {
       C.light('day', [6, 0, 10], 22);
       const m = C.show(C.cast.md, 6, 6.6, 0, 0.22); m.face('smirk');
       m.armL.rotation.z = 0.5; m.armR.rotation.z = -0.5; m.armL.rotation.x = m.armR.rotation.x = -0.4;
       closeFace(C, m, 3.0, 0.5, 48, -0.3);
-      if (t > 0.6) aura(C, 0);
+      if (t > 0.85) aura(C, 0);
     } },
   { id: 3, dur: 2.2, text: 'So he did what every legend does.',
     frame(C, t, d) {
@@ -64,31 +64,31 @@ export const SHOTS = [
       const hp = C.headPos(b);
       C.camLerp(easeInOut(t / d), [hp.x - 2.2, hp.y + 0.2, hp.z - 2.8, hp.x + 0.6, hp.y - 0.4, hp.z + 1.2, 50], [hp.x - 1.6, hp.y + 0.1, hp.z - 2.2, hp.x + 0.6, hp.y - 0.4, hp.z + 1.2, 50]);
     } },
-  { id: 6, dur: 2.2, text: '“Unc… are you lost?”', wins: [[0.15, 0.7], [0.95, 1.8]],
+  { id: 6, dur: 2.2, text: '“Unc… are you lost?”', wins: [[0.15, 0.6], [0.89, 1.6]],
     frame(C, t, d) {
       gymLight(C); aura(C, 0);
       const b = C.show(C.cast.bro, MEET.bro[0], MEET.bro[1], 0, 0); b.armR.rotation.x = -1.4; C.hold(b, C.props.shaker, 'R', 0, -0.1, 0.1, -1.4, 0, 0);
       talkIn(b, t, this.wins, 'talk', 'smirk');
       closeFace(C, b, 2.2, 0.3);
     } },
-  { id: 7, dur: 2.4, text: 'M.D. slowly took off his sunglasses.', sfx: [{ t: 1.2, n: 'shine' }],
+  { id: 7, dur: 2.4, text: 'M.D. slowly took off his sunglasses.', sfx: [{ t: 1.6, n: 'shine' }],
     frame(C, t, d) {
       gymLight(C); aura(C, 0);
-      const off = t > 1.2;
+      const off = t > 1.6;
       const m = C.show(off ? C.cast.md0 : C.cast.md, MEET.md[0], MEET.md[1], PI, 0); m.face('smirk');
-      const lift = Math.sin(seg(t, 0.4, 2.0) * PI);
+      const lift = Math.sin(seg(t, 0.8, 2.4) * PI);
       m.armR.rotation.x = -2.6 * lift; m.armR.rotation.z = 0.7 * lift;
       if (off) { C.hold(m, C.props.shades, 'R', 0, -0.05, 0.1); }
       closeFace(C, m, 2.0, 0.25);
     } },
-  { id: 8, dur: 3.6, text: '“Unc? Son, I’m not unc. I’m *vintage.*”', wins: [[0.15, 0.6], [0.9, 2.0], [2.3, 3.2]],
+  { id: 8, dur: 3.6, text: '“Unc? Son, I’m not unc. I’m *vintage.*”', wins: [[0.15, 0.6], [1.0, 2.6], [2.95, 3.85]],
     frame(C, t, d) {
       gymLight(C); aura(C, 0);
       const m = C.show(C.cast.md0, MEET.md[0], MEET.md[1], PI, 0); C.hold(m, C.props.shades, 'R', 0, -0.05, 0.1); m.armR.rotation.x = -0.6;
       talkIn(m, t, this.wins, 'ktalk', 'smirk');
       closeFace(C, m, 1.9, 0.3);
     } },
-  { id: 9, dur: 1.8, text: 'Plus one thousand aura.', at: 0.2, sfx: [{ t: 0.2, n: 'cash' }],
+  { id: 9, dur: 1.8, text: 'Plus one thousand aura.', at: 0.42, sfx: [{ t: 0.42, n: 'cash' }],
     frame(C, t, d) {
       gymLight(C);
       const m = C.show(C.cast.md, MEET.md[0], MEET.md[1], PI, 0); m.face('smirk');
@@ -96,13 +96,13 @@ export const SHOTS = [
       C.cam([G.x - 1.2, 3.3, G.z + 1.0], [G.x, 2.3, G.z + 5.2], 50);
       aura(C, 0, 1000, t - this.at);
     } },
-  { id: 10, dur: 1.8, text: 'Then he *locked in.*', sfx: [{ t: 0.3, n: 'zoom' }, { t: 0.5, n: 'bass' }],
+  { id: 10, dur: 1.8, text: 'Then he *locked in.*', sfx: [{ t: 0.35, n: 'zoom' }, { t: 0.55, n: 'bass' }],
     frame(C, t, d) {
       gymLight(C); aura(C, 1000);
       const m = C.show(C.cast.md, MEET.md[0], MEET.md[1], PI, 0); m.face('serious');
-      const hp = C.headPos(m); const z = easeOut(seg(t, 0.3, 0.55));
+      const hp = C.headPos(m); const z = easeOut(seg(t, 0.35, 0.6));
       C.camLerp(z, [hp.x, hp.y, hp.z - 3, hp.x, hp.y, hp.z, 48], [hp.x, hp.y + 0.05, hp.z - 1.0, hp.x, hp.y + 0.05, hp.z, 36]);
-      C.ov.stamp = { text: 'LOCKED IN', k: seg(t, 0.5, 0.7) }; C.ov.vignette = 0.5;
+      C.ov.stamp = { text: 'LOCKED IN', k: seg(t, 0.55, 0.75) }; C.ov.vignette = 0.5;
     } },
   { id: 11, dur: 1.6, text: 'First, the dumbbells.',
     frame(C, t, d) {
@@ -111,16 +111,16 @@ export const SHOTS = [
       C.put(C.props.db6, RACK[0] - 0.4, 1.0, RACK[1] - 0.6, 0, PI / 2, 0); C.put(C.props.db7, RACK[0] + 0.4, 1.0, RACK[1] - 0.6, 0, PI / 2, 0);
       C.cam([RACK[0] + 1.5, 2.6, RACK[1] + 5.0], [RACK[0], 1.4, RACK[1] - 0.6], 50);
     } },
-  { id: 12, dur: 2.4, text: 'He picked up the *six*-pound dumbbell.', sfx: [{ t: 1.0, n: 'stamp' }],
+  { id: 12, dur: 2.4, text: 'He picked up the *six*-pound dumbbell.', sfx: [{ t: 0.75, n: 'stamp' }],
     frame(C, t, d) {
       gymLight(C); aura(C, 1000);
       const m = C.show(C.cast.md, RACK[0], RACK[1] + 1.0, PI, 0); m.face('strain');
-      const lift = easeOut(seg(t, 0.6, 1.2)); m.armL.rotation.x = lerp(0, -1.7, lift);
+      const lift = easeOut(seg(t, 0.4, 0.9)); m.armL.rotation.x = lerp(0, -1.7, lift);
       C.hold(m, C.props.db6, 'L', 0, -0.05, 0.05, 0, 0, 0);
       C.put(C.props.db7, RACK[0] + 0.4, 1.0, RACK[1] - 0.6, 0, PI / 2, 0);
       closeFace(C, m, 3.0, -0.8, 50, -0.5);
     } },
-  { id: 13, dur: 1.4, text: 'Then the *seven.*', sfx: [{ t: 0.4, n: 'stamp' }],
+  { id: 13, dur: 1.4, text: 'Then the *seven.*', sfx: [{ t: 0.46, n: 'stamp' }],
     frame(C, t, d) {
       gymLight(C); aura(C, 1000);
       const m = C.show(C.cast.md, RACK[0], RACK[1] + 1.0, PI, 0); m.face('strain');
@@ -128,7 +128,7 @@ export const SHOTS = [
       C.hold(m, C.props.db6, 'L', 0, -0.05, 0.05); C.hold(m, C.props.db7, 'R', 0, -0.05, 0.05);
       closeFace(C, m, 3.0, 0.8, 50, -0.5);
     } },
-  { id: 14, dur: 2.0, text: '“*Six… seven!*”', sfx: [{ t: 0.2, n: 'bass' }, { t: 1.0, n: 'bass' }], wins: [[0.15, 0.6], [0.9, 1.5]],
+  { id: 14, dur: 2.0, text: '“*Six… seven!*”', sfx: [{ t: 0.15, n: 'bass' }, { t: 1.06, n: 'bass' }], wins: [[0.15, 0.75], [1.06, 1.7]],
     frame(C, t, d) {
       gymLight(C); aura(C, 1000);
       const m = C.show(C.cast.md, RACK[0], RACK[1] + 1.0, PI, 0);
@@ -138,7 +138,7 @@ export const SHOTS = [
       closeFace(C, m, 2.6, 0.2, 48, -0.3);
       C.ov.shakeX = noise1(t * 30, 3) * 0.015;
     } },
-  { id: 15, dur: 1.6, text: 'The whole gym *stopped.*', music: 'silence', sfx: [{ t: 0.1, n: 'record' }],
+  { id: 15, dur: 1.6, text: 'The whole gym *stopped.*', music: 'silence', sfx: [{ t: 0.8, n: 'record' }],
     frame(C, t, d) {
       gymLight(C); aura(C, 1000); gymmers(C, t, [RACK[0], RACK[1] + 1], 'shock');
       const m = C.show(C.cast.md, RACK[0], RACK[1] + 1.0, PI, 0); m.armL.rotation.x = m.armR.rotation.x = -1.4; m.face('smirk');
@@ -151,7 +151,7 @@ export const SHOTS = [
       const p = C.cast.gymmers[Math.min(3, Math.floor(t / (d / 4)))];
       closeFace(C, p, 2.4, 0.3, 46);
     } },
-  { id: 17, dur: 1.8, text: 'Plus five thousand aura.', at: 0.2, music: 'groove', sfx: [{ t: 0.2, n: 'cash' }],
+  { id: 17, dur: 1.8, text: 'Plus five thousand aura.', at: 0.5, music: 'groove', sfx: [{ t: 0.5, n: 'cash' }],
     frame(C, t, d) {
       gymLight(C); gymmers(C, t, [RACK[0], RACK[1] + 1], 'shock');
       const m = C.show(C.cast.md, RACK[0], RACK[1] + 1.0, PI, 0); m.armL.rotation.x = m.armR.rotation.x = -2.8; m.face('smirk');
@@ -165,31 +165,31 @@ export const SHOTS = [
       const m = treadmillRun(C, t, 0, d); m.face('smirk');
       C.cam([TM[0] + 4.0, 2.8, TM[1] + 3.2], [TM[0], 1.6, TM[1]], 50);
     } },
-  { id: 19, dur: 2.0, text: 'Speed *one.* *Huss.*', at: 1.0, sfx: [{ t: 0.2, n: 'tap' }, { t: 1.0, n: 'huss' }],
+  { id: 19, dur: 2.0, text: 'Speed *one.* *Huss.*', at: 1.43, sfx: [{ t: 0.55, n: 'tap' }, { t: 1.43, n: 'huss' }],
     frame(C, t, d) {
       gymLight(C); aura(C, 6000);
       treadmillRun(C, t, 1, d);
       C.cam([TM[0] + 3.0, 2.2, TM[1] + 1.2], [TM[0], 1.6, TM[1]], 50);
       C.ov.slang = [['HUSS', 0.5, 0.72, t - this.at, -0.08, '#ffffff']];
     } },
-  { id: 20, dur: 2.2, text: 'Speed *five.* *Huss. Huss.*', sfx: [{ t: 0.2, n: 'tap' }, { t: 1.0, n: 'huss' }, { t: 1.5, n: 'huss' }],
+  { id: 20, dur: 2.2, text: 'Speed *five.* *Huss. Huss.*', sfx: [{ t: 0.5, n: 'tap' }, { t: 1.38, n: 'huss' }, { t: 2.13, n: 'huss' }],
     frame(C, t, d) {
       gymLight(C); aura(C, 6000);
       const m = treadmillRun(C, t, 5, d);
       const hq = C.headPos(m); C.cam([hq.x + 3.4, hq.y + 0.3, hq.z - 2.2], [hq.x, hq.y - 0.6, hq.z], 50);
-      C.ov.slang = [['HUSS', 0.3, 0.7, t - 1.0, -0.1, '#ffffff'], ['HUSS', 0.7, 0.76, t - 1.5, 0.1, '#ffd23f']];
+      C.ov.slang = [['HUSS', 0.3, 0.7, t - 1.38, -0.1, '#ffffff'], ['HUSS', 0.7, 0.76, t - 2.13, 0.1, '#ffd23f']];
     } },
-  { id: 21, dur: 2.8, text: 'Speed *ten.* *Huss. Huss. Huss.*', sfx: [{ t: 0.2, n: 'tap' }, { t: 1.0, n: 'huss' }, { t: 1.5, n: 'huss' }, { t: 2.0, n: 'huss' }],
+  { id: 21, dur: 2.8, text: 'Speed *ten.* *Huss. Huss. Huss.*', sfx: [{ t: 0.58, n: 'tap' }, { t: 1.32, n: 'huss' }, { t: 1.99, n: 'huss' }, { t: 2.61, n: 'huss' }],
     frame(C, t, d) {
       gymLight(C); aura(C, 6000);
       const m = treadmillRun(C, t, 10, d);
       const hp = C.headPos(m);
       C.props.drops.forEach((dr, i) => { const p = ((t * 2 + i / 10) % 1); C.put(dr, hp.x + Math.sin(i * 2.4) * (0.4 + p), hp.y + 0.2 + p * 0.5 - p * p, hp.z + Math.cos(i * 2.4) * (0.3 + p)); });
       C.cam([hp.x + 3.0 + noise1(t * 20, 1) * 0.04, hp.y + 0.4, hp.z - 2.0], [hp.x, hp.y - 0.5, hp.z], 50);
-      C.ov.slang = [['HUSS', 0.25, 0.68, t - 1.0, -0.12, '#ffffff'], ['HUSS', 0.72, 0.74, t - 1.5, 0.1, '#ffd23f'], ['HUSS', 0.5, 0.84, t - 2.0, -0.04, '#ff5a5a']];
+      C.ov.slang = [['HUSS', 0.25, 0.68, t - 1.32, -0.12, '#ffffff'], ['HUSS', 0.72, 0.74, t - 1.99, 0.1, '#ffd23f'], ['HUSS', 0.5, 0.84, t - 2.61, -0.04, '#ff5a5a']];
     } },
   // 21b — the meme beat: everybody in the gym copies him, one by one: HUSS!
-  { id: 99, dur: 2.5, text: '', meme: true, sfx: [{ t: 0.02, n: 'hussShout' }, { t: 0.52, n: 'hussShout' }, { t: 1.02, n: 'hussShout' }, { t: 1.52, n: 'hussShout' }, { t: 2.02, n: 'hussShout' }],
+  { id: 99, dur: 2.5, text: '', meme: true, music: 'silence', sfx: [{ t: 0.02, n: 'hussShout' }, { t: 0.52, n: 'hussShout' }, { t: 1.02, n: 'hussShout' }, { t: 1.52, n: 'hussShout' }, { t: 2.02, n: 'hussShout' }],
     frame(C, t, d) {
       gymLight(C); aura(C, 6000);
       const i = Math.min(4, Math.floor(t / 0.5)); const lt = t - i * 0.5;
@@ -205,36 +205,36 @@ export const SHOTS = [
       C.ov.slang = [['HUSS!', 0.5, 0.62, lt * 1.6, (i % 2 ? 1 : -1) * 0.05, '#ffffff', 190]];
       C.ov.shakeX = noise1(t * 40, i) * 0.02 * (1 - seg(lt, 0, 0.3));
     } },
-  { id: 22, dur: 3.0, text: 'The gym bro was so shocked, he dropped his *protein shake.*', sfx: [{ t: 2.2, n: 'splash' }],
+  { id: 22, dur: 3.0, text: 'The gym bro was so shocked, he dropped his *protein shake.*', music: 'groove', sfx: [{ t: 2.35, n: 'splash' }],
     frame(C, t, d) {
       gymLight(C); aura(C, 6000);
       treadmillRun(C, t, 10, d);
       const b = C.show(C.cast.bro, TM[0] + 3.0, TM[1] - 1.2, -PI / 2 + 0.4, 0); b.face('shock');
       const hand = new C.THREE.Vector3();
-      if (t < 2.0) { b.armR.rotation.x = -1.4; C.hold(b, C.props.shaker, 'R', 0, -0.1, 0.1, -1.4, 0, 0); }
-      else { b.armR.rotation.x = -1.4; b.armR.userData.hand.getWorldPosition(hand); const ft = seg(t, 2.0, 2.4); C.put(C.props.shaker, hand.x, lerp(hand.y, 0.1, ft * ft), hand.z, ft * 3, 0, ft * 2); }
+      if (t < 1.95) { b.armR.rotation.x = -1.4; C.hold(b, C.props.shaker, 'R', 0, -0.1, 0.1, -1.4, 0, 0); }
+      else { b.armR.rotation.x = -1.4; b.armR.userData.hand.getWorldPosition(hand); const ft = seg(t, 1.95, 2.35); C.put(C.props.shaker, hand.x, lerp(hand.y, 0.1, ft * ft), hand.z, ft * 3, 0, ft * 2); }
       closeFace(C, b, 2.6, -0.4, 50, -0.3);
     } },
-  { id: 23, dur: 3.0, text: 'M.D. jumped off, did the *bicep heart pose,* and said:', sfx: [{ t: 0.3, n: 'boing' }, { t: 1.6, n: 'shine' }],
+  { id: 23, dur: 3.0, text: 'M.D. jumped off, did the *bicep heart pose,* and said:', sfx: [{ t: 0.5, n: 'boing' }, { t: 2.3, n: 'shine' }],
     frame(C, t, d) {
       gymLight(C); aura(C, 6000); gymmers(C, t);
       const j = Math.sin(seg(t, 0.2, 0.8) * PI);
       const m = C.show(C.cast.md, TM[0] + 1.4, TM[1] + 1.2, PI / 2 + 0.6, j * 0.9); m.face('smirk');
-      const pose = easeOut(seg(t, 1.0, 1.5));
+      const pose = easeOut(seg(t, 1.75, 2.3));
       m.armL.rotation.z = lerp(0, 1.5, pose); m.armL.rotation.x = lerp(0, -0.3, pose);
       m.armR.rotation.x = lerp(0, -1.9, pose); m.armR.rotation.z = lerp(0, 1.0, pose);
       closeFace(C, m, 3.4, 0.2, 50, -0.5);
     } },
-  { id: 24, dur: 2.0, text: '“Unc is *cooking.*”', wins: [[0.15, 1.2]], sfx: [{ t: 1.0, n: 'confetti' }],
+  { id: 24, dur: 2.0, text: '“Unc is *cooking.*”', wins: [[0.15, 1.25]], sfx: [{ t: 0.65, n: 'confetti' }],
     frame(C, t, d) {
       gymLight(C); aura(C, 6000);
       const m = C.show(C.cast.md, TM[0] + 1.4, TM[1] + 1.2, PI / 2 + 0.6, 0);
       m.armL.rotation.z = 1.5; m.armL.rotation.x = -0.3; m.armR.rotation.x = -1.9; m.armR.rotation.z = 1.0;
       talkIn(m, t, this.wins, 'ktalk', 'smirk');
       const hp = closeFace(C, m, 2.4, 0.2, 48, -0.2);
-      if (t > 1.0) C.props.confetti.forEach((p) => { const [a, b, c2, e] = p.userData.seed; const lt = t - 1.0; C.put(p, hp.x + (a - 0.5) * 4, hp.y + 2 - ((lt * (0.8 + b) + e * 3) % 4), hp.z + (c2 - 0.5) * 3, lt * 5 * a, lt * 3 * b, lt * 4); });
+      if (t > 0.65) C.props.confetti.forEach((p) => { const [a, b, c2, e] = p.userData.seed; const lt = t - 0.65; C.put(p, hp.x + (a - 0.5) * 4, hp.y + 2 - ((lt * (0.8 + b) + e * 3) % 4), hp.z + (c2 - 0.5) * 3, lt * 5 * a, lt * 3 * b, lt * 4); });
     } },
-  { id: 25, dur: 1.8, text: 'Plus ten thousand aura.', at: 0.2, sfx: [{ t: 0.2, n: 'cash' }],
+  { id: 25, dur: 1.8, text: 'Plus ten thousand aura.', at: 0.5, sfx: [{ t: 0.5, n: 'cash' }],
     frame(C, t, d) {
       gymLight(C); gymmers(C, t, [TM[0] + 1.4, TM[1] + 1.2], 'shock');
       const m = C.show(C.cast.md, TM[0] + 1.4, TM[1] + 1.2, PI / 2 + 0.6, 0); m.face('smirk');
@@ -250,7 +250,7 @@ export const SHOTS = [
       const dir = PI / 2 + 0.6; C.put(C.props.bottle, TM[0] + 1.4 + Math.sin(dir) * 0.9, 0, TM[1] + 1.2 + Math.cos(dir) * 0.9);
       C.cam([TM[0] + 1.4 + Math.cos(dir) * 3.6, 1.8, TM[1] + 1.2 - Math.sin(dir) * 3.6], [TM[0] + 1.4 + Math.sin(dir) * 0.4, 1.2, TM[1] + 1.2 + Math.cos(dir) * 0.4], 50);
     } },
-  { id: 27, dur: 2.2, text: 'And his back went… *crack.*', at: 1.5, music: 'silence', sfx: [{ t: 1.5, n: 'crack' }, { t: 1.55, n: 'bass' }],
+  { id: 27, dur: 2.2, text: 'And his back went… *crack.*', at: 1.18, music: 'silence', sfx: [{ t: 1.18, n: 'crack' }, { t: 1.22, n: 'bass' }],
     frame(C, t, d) {
       gymLight(C); aura(C, 16000);
       const m = C.show(C.cast.md, TM[0] + 1.4, TM[1] + 1.2, PI / 2 + 0.6, 0); m.torso.rotation.x = 1.25; m.armR.rotation.x = -0.6;
@@ -261,7 +261,7 @@ export const SHOTS = [
       C.ov.crack = t > this.at ? 1 - seg(t, this.at + 0.4, d) * 0.6 : 0;
       if (t > this.at) C.ov.shakeX = noise1(t * 50, 2) * 0.04 * (1 - seg(t, this.at, this.at + 0.5));
     } },
-  { id: 28, dur: 2.0, text: 'Minus fifty thousand aura.', at: 0.2, sfx: [{ t: 0.2, n: 'fail' }],
+  { id: 28, dur: 2.0, text: 'Minus fifty thousand aura.', at: 0.6, sfx: [{ t: 0.6, n: 'fail' }],
     frame(C, t, d) {
       gymLight(C); gymmers(C, t, [TM[0] + 1.4, TM[1] + 1.2], 'shock');
       const m = C.show(C.cast.md, TM[0] + 1.4, TM[1] + 1.2, PI / 2 + 0.6, 0); m.torso.rotation.x = 1.25; m.armR.rotation.x = -0.6; m.face('scream');
@@ -284,7 +284,7 @@ export const SHOTS = [
       const b = C.show(C.cast.bro, G.x + 0.5, G.z + 5.5, PI - 0.2, 0); b.face('blank'); b.armR.rotation.x = -0.4;
       closeFace(C, b, 2.6, 0.5, 48);
     } },
-  { id: 31, dur: 3.0, text: '“Yo… unc kinda *mogged everybody.*”', wins: [[0.15, 0.5], [0.9, 2.6]], sfx: [{ t: 2.6, n: 'aura' }],
+  { id: 31, dur: 3.0, text: '“Yo… unc kinda *mogged everybody.*”', wins: [[0.15, 0.6], [0.95, 2.5]], sfx: [{ t: 2.3, n: 'aura' }],
     frame(C, t, d) {
       gymLight(C); aura(C, -34000);
       const b = C.show(C.cast.bro, G.x + 0.5, G.z + 5.5, PI - 0.2, 0); b.armR.rotation.x = -0.4;

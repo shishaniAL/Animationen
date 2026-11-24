@@ -4,8 +4,8 @@ import re, json, wave, sys
 from pocketsphinx import Decoder
 script, wav, outp = sys.argv[1:4]
 disp = open(script).read().split()
-MAP = {'5': ['five'], '7': ['seven'], '82': ['eighty', 'two'], 'm.d': ['m', 'd'], '24/7': ['twenty', 'four', 'seven']}
-PRON = {'mickel': 'M IH K AH L', "mickel's": 'M IH K AH L Z', 'ranjid': 'R AA N JH IH D', "ranjid's": 'R AA N JH IH D Z'}
+MAP = {'sixpound': ['six', 'pound'], 'twentyyearold': ['twenty', 'year', 'old'], 'vs': ['versus'], '5': ['five'], '7': ['seven'], '82': ['eighty', 'two'], 'm.d': ['m', 'd'], '24/7': ['twenty', 'four', 'seven']}
+PRON = {'unc': 'AH NG K', 'clanker': 'K L AE NG K ER', 'mogged': 'M AA G D', 'mickel': 'M IH K AH L', "mickel's": 'M IH K AH L Z', 'ranjid': 'R AA N JH IH D', "ranjid's": 'R AA N JH IH D Z'}
 norm, owner = [], []
 for i, t in enumerate(disp):
     k = re.sub(r"[^a-z0-9'./]", '', t.lower()).strip('.').strip("'")

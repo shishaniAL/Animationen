@@ -356,7 +356,7 @@ export const SHOTS = [
       C.camLerp(easeInOut(t / d), [12, 9, -14, 6, 1, 2, 50], [11, 6, -10, 6, 1.5, 4, 50]);
     } },
   // 33 — next time: M.D. goes to the gym
-  { id: 33, dur: 5.73, text: 'Next time: M.D. goes to the gym.', sfx: [{ t: 0.4, n: 'whoosh' }, { t: 1.26, n: 'bass' }],
+  { id: 33, dur: 5.73, text: 'Next time: M.D. goes to the gym.', capY: 0.84, sfx: [{ t: 0.4, n: 'whoosh' }, { t: 1.26, n: 'bass' }],
     frame(C, t, d) {
       C.light('day', [6, 0, 10], 22);
       const m = C.show(C.cast.md, 6, 4 + t * 1.2, 0, 0.22); m.walk(t * 7); m.face('smirk');

@@ -257,8 +257,8 @@ export function makeChar(cfg) {
     }
   } else if (hat.type === 'cap') {
     const hm = mat(hat.color);
-    const b = sphere(D.headW * 0.56, hm, 0, top - 0.1, 0, 24, 12, ); b.scale.set(1, 0.6, 1); head.add(b);
-    const brim = rbox(0.5, 0.05, 0.36, 0.02, hm, 0, top - 0.12, hat.back ? -D.headD / 2 - 0.12 : D.headD / 2 + 0.12); head.add(brim);
+    const b = sphere(D.headW * 0.56, hm, 0, top + 0.0, 0, 24, 12, ); b.scale.set(1, 0.42, 1); head.add(b);
+    const brim = rbox(0.5, 0.05, 0.36, 0.02, hm, 0, top - 0.02, hat.back ? -D.headD / 2 - 0.12 : D.headD / 2 + 0.12); head.add(brim);
   } else if (hat.type === 'hair') {
     const hm = mat(hat.color, { roughness: 0.95 });
     head.add(rbox(D.headW + 0.04, 0.2, D.headD + 0.04, 0.08, hm, 0, top - 0.04, -0.01));

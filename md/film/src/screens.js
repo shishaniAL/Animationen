@@ -42,6 +42,14 @@ export function makePhoneScreen() {
       if (p < 0.25) stick(ctx, 40, 120, 1, 0); else { const q = (p - 0.25) / 0.75; stick(ctx, 40 + q * 180, 110 + q * 230, 1, q * 9); }
       appUI(tt);
       if (mode === 'paused') { ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#fff'; ctx.fillRect(w / 2 - 30, h / 2 - 40, 20, 80); ctx.fillRect(w / 2 + 10, h / 2 - 40, 20, 80); }
+    } else if (mode === 'dance') {
+      const g = ctx.createLinearGradient(0, 0, w, h); g.addColorStop(0, '#3a0ca3'); g.addColorStop(1, '#f72585'); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      const b2 = Math.sin(t * 9);
+      ctx.save(); ctx.translate(w / 2, h * 0.62); ctx.strokeStyle = '#fff'; ctx.fillStyle = '#fff'; ctx.lineWidth = 9; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(0, -110 + b2 * 6, 22, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(0, -88); ctx.lineTo(b2 * 10, 0); ctx.moveTo(0, -70); ctx.lineTo(-50, -70 - 40 * b2); ctx.moveTo(0, -70); ctx.lineTo(50, -100 + 40 * b2); ctx.moveTo(b2 * 10, 0); ctx.lineTo(-30, 60); ctx.moveTo(b2 * 10, 0); ctx.lineTo(30 + b2 * 20, 60); ctx.stroke(); ctx.restore();
+      txt(ctx, '#trend', 14, h - 52, 16, '#fff', 800, 'left'); txt(ctx, 'new dance just dropped', 14, h - 32, 12, '#ddd', 600, 'left');
+      appUI(t);
     } else if (mode === 'motivation') {
       const g = ctx.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#1b1b3a'); g.addColorStop(0.6, '#f7a440'); g.addColorStop(1, '#f25c3a'); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
       ctx.fillStyle = '#ffe28a'; ctx.beginPath(); ctx.arc(w / 2, h * 0.62, 60, 0, 7); ctx.fill();

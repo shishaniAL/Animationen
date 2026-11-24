@@ -1,308 +1,366 @@
 import { clamp, lerp, seg, smooth, easeOut, easeIn, easeInOut, backOut, noise1 } from './lib.js';
-import { ROOM, LIVING } from './sets.js';
+import { KITCHEN } from './world.js';
+import { LIVING } from './sets.js';
+import { OLDROOM } from './sets_md.js';
 
 const PI = Math.PI;
 const talk = (ch, t, open = 'talk', closed = null, rate = 7) => ch.face(Math.sin(t * rate * PI) > 0 ? open : (closed || ch.cfg.defaultFace));
-const R = ROOM, L = LIVING;
-const HOUSE = { x: 9.6, z: 85 };
-const CHAIR = [R.x + 2.2, R.z - 1.9];
-const BED = [R.x - 3.6, R.z + 0.2];
+const O = OLDROOM, L = LIVING, K = KITCHEN;
+const BED = [O.x - 2.4, O.z - 2.0];
+const ALARM = [O.x - 0.3, 1.36, O.z - 3.85];
+const SOFA = [L.x + 0.9, L.z + 3.2];
+const HOUSE = { x: -9.2, z: -50 };
 
-function day(C) { C.light('indoorDay', [R.x, 0, R.z], 12); C.room.winP.material.color.setRGB(7, 7, 6); C.room.lamp.intensity = 6; }
-function night(C) { C.light('indoorNight', [R.x, 0, R.z], 12); }
-// Rajesh lying in bed on his back, phone above his face
-function lying(C, ch, t, face = 'smile') {
-  const m = C.show(ch, BED[0], BED[1] + 1.0, 0, 1.05); m.body.rotation.x = -PI / 2; m.face(face);
-  m.armR.rotation.x = -1.35; m.armR.rotation.z = 0.25; m.armL.rotation.x = -0.3; m.armL.rotation.z = -0.9;
-  C.hold(m, C.props.phone, 'R', -0.12, -0.08, 0.05, PI / 2, PI, 0);
-  return m;
+function roomDay(C) { C.light('indoorDay', [O.x, 0, O.z], 12); C.room.winP.material.color.setRGB(9, 9, 8); }
+function roomNight(C) { C.light('indoorNight', [O.x, 0, O.z], 12); C.room.lamp.intensity = 4; }
+function living(C) { C.light('indoorDay', [L.x, 0, L.z + 1], 12); C.living.ceil.intensity = 22; }
+function onSofa(C, ch, face = 'blank') { const m = C.show(ch, SOFA[0], SOFA[1], PI, 0); m.sit(1.12); m.face(face); m.armL.rotation.x = m.armR.rotation.x = -0.6; m.torso.rotation.x = 0.12; return m; }
+function inBed(C, face = 'sleep') { const m = C.show(C.cast.mike, BED[0], BED[1] + 1.0, 0, 1.0); m.body.rotation.x = -PI / 2; m.face(face); m.armL.rotation.x = m.armR.rotation.x = -0.1; return m; }
+function alarmClose(C, txt, t, d) {
+  C.put(C.props.alarm, ...ALARM); C.props.alarm.userData.draw(txt);
+  C.camLerp(easeOut(t / d), [ALARM[0] + 0.25, ALARM[1] + 0.12, ALARM[2] + 1.7, ALARM[0], ALARM[1], ALARM[2], 40], [ALARM[0] + 0.15, ALARM[1] + 0.08, ALARM[2] + 1.35, ALARM[0], ALARM[1], ALARM[2], 40]);
 }
-// someone at the bedroom door
-function doorMom(C, t, open = [0.1, 0.5]) {
-  C.room.door.rotation.y = 1.35 * easeOut(seg(t, open[0], open[1]));
-  C.fill.intensity = 14; C.fill.position.set(R.x + 4.2, 3.4, R.z + 2.6);
-  const mm = C.show(C.cast.mom, R.x + 5.4, R.z + 2.1, -PI / 2 - 0.4, 0);
-  return mm;
-}
-function phoneClose(C, mode, t, extra = 0) {
-  day(C);
-  C.phoneScr.draw(mode, t);
-  C.put(C.props.phone, R.x + 50, 2.0, R.z, 0, 0, 0);
-  C.cam([R.x + 50, 2.0, R.z + 0.62 - extra], [R.x + 50, 2.0, R.z], 50);
-  C.scene.background = null;
-}
+function closeFace(C, ch, dist = 2.3, dx = 0.2, fov = 46) { const hp = C.headPos(ch); const a = ch.root.rotation.y; C.cam([hp.x + Math.sin(a) * dist + Math.cos(a) * dx, hp.y + 0.02, hp.z + Math.cos(a) * dist - Math.sin(a) * dx], [hp.x, hp.y - 0.02, hp.z], fov); return hp; }
 
 export const SHOTS = [
-  // 1 — the town
-  { id: 1, dur: 2.6, text: 'There was once a man named', music: 'intro', sfx: [{ t: 0, n: 'whoosh' }],
+  // 1 — This is Michael Dawson.
+  { id: 1, dur: 1.65, text: 'This is Michael Dawson.', music: 'soft', sfx: [{ t: 0.45, n: 'zoom' }],
     frame(C, t, d) {
-      C.light('day', [8, 0, HOUSE.z], 90);
-      C.camLerp(easeInOut(t / d), [-28, 46, 30, 6, 0, 80, 50], [-4, 12, 72, 12, 3, HOUSE.z, 50]);
-    } },
-  // 2 — Rajesh Kumar, zero responsibilities
-  { id: 2, dur: 3.6, text: '*Rajesh Kumar,* who had absolutely *no responsibilities.*', sfx: [{ t: 0.05, n: 'zoom' }, { t: 0.15, n: 'bass' }],
-    frame(C, t, d) {
-      day(C); C.phoneScr.draw('feed', t);
-      const m = lying(C, C.cast.rj, t, 'smile');
+      living(C);
+      const m = onSofa(C, C.cast.mike, 'smile'); m.armR.rotation.x = -1.6; m.armR.rotation.z = Math.sin(t * 6) * 0.2 - 0.2;
+      C.hold(m, C.props.crossword, 'L', 0, -0.05, 0.3, PI / 2.4, 0, 0); C.props.crossword.scale.setScalar(0.6);
       const hp = C.headPos(m);
-      C.camLerp(easeOut(seg(t, 0, 0.35)), [hp.x + 1.2, hp.y + 4.0, hp.z + 3.0, hp.x, hp.y, hp.z + 0.6, 50], [hp.x + 0.7, hp.y + 2.6, hp.z + 1.9, hp.x, hp.y, hp.z + 0.5, 50]);
-      C.ov.nameTag = seg(t, 0.12, 0.45); C.ov.nameText = ['RAJESH KUMAR'];
+      C.camLerp(easeOut(t / d), [hp.x - 0.4, hp.y - 0.3, hp.z - 4.0, hp.x, hp.y - 0.6, hp.z, 50], [hp.x - 0.3, hp.y - 0.2, hp.z - 3.2, hp.x, hp.y - 0.5, hp.z, 50]);
+      C.ov.nameTag = seg(t, 0.44, 0.75); C.ov.nameText = ['MICHAEL DAWSON'];
     } },
-  // 3 — no job, no girlfriend, no hobbies
-  { id: 3, dur: 2.8, text: '*No job.* *No girlfriend.* *No hobbies.*', sfx: [{ t: 0.42, n: 'stamp' }, { t: 1.4, n: 'stamp' }, { t: 2.55, n: 'stamp' }],
+  // 2 — 82 years old
+  { id: 2, dur: 2.19, text: 'Michael is 82 years old.', sfx: [{ t: 0.8, n: 'stamp' }],
     frame(C, t, d) {
-      day(C); C.phoneScr.draw('feed', t);
-      const cut = t < 1.1 ? 0 : t < 2.2 ? 1 : 2, lt = t - [0.4, 1.37, 2.52][cut];
-      const m = lying(C, C.cast.rj, t, ['blank', 'smile', 'blank'][cut]);
+      living(C);
+      const m = onSofa(C, C.cast.mike, 'smile');
       const hp = C.headPos(m);
-      const cams = [[hp.x - 1.6, hp.y + 1.4, hp.z + 0.5], [hp.x + 1.6, hp.y + 1.8, hp.z + 1.4], [hp.x, hp.y + 2.4, hp.z + 0.2]];
-      C.cam(cams[cut], [hp.x, hp.y, hp.z + 0.4], 50);
-      C.ov.stamp = { text: ['NO JOB', 'NO GIRLFRIEND', 'NO HOBBIES'][cut], k: seg(lt, 0, 0.25) };
+      C.camLerp(t / d, [hp.x - 0.2, hp.y, hp.z - 1.6, hp.x, hp.y - 0.05, hp.z, 46], [hp.x - 0.15, hp.y, hp.z - 1.35, hp.x, hp.y - 0.05, hp.z, 46]);
+      C.ov.stamp = { text: 'AGE: 82', k: seg(t, 0.78, 1.0) };
     } },
-  // 4 — just Wi-Fi and unlimited screen time
-  { id: 4, dur: 2.8, text: 'Just *Wi-Fi* and *unlimited screen time.*', sfx: [{ t: 0.1, n: 'shine' }],
+  // 3 — every day exactly the same thing
+  { id: 3, dur: 3.23, text: 'Every day, Michael did exactly the same thing.', sfx: [{ t: 0.1, n: 'tick' }, { t: 1.1, n: 'tick' }, { t: 2.1, n: 'tick' }],
     frame(C, t, d) {
-      day(C); C.phoneScr.draw('feed', t);
-      C.put(C.props.router, BED[0] + 1.0, 1.12, BED[1] - 1.6, 0, -0.5, 0);
-      const m = C.show(C.cast.rj, BED[0] + 0.2, BED[1] + 0.9, 0, 1.05); m.body.rotation.x = -PI / 2; m.body.rotation.z = 0.5; m.face('proud');
-      m.armR.rotation.x = -1.3; m.armR.rotation.z = -0.5; m.armL.rotation.x = -1.4; m.armL.rotation.z = 0.2;
-      const rp = [BED[0] + 1.0, 1.4, BED[1] - 1.6];
+      living(C);
+      const m = onSofa(C, C.cast.mike, 'blank'); m.idle(t * 0.3);
+      C.camLerp(easeInOut(t / d), [L.x - 3.5, 3.6, L.z - 3.5, SOFA[0], 1.6, SOFA[1], 50], [L.x - 2.2, 3.0, L.z - 1.8, SOFA[0], 1.8, SOFA[1], 50]);
+    } },
+  // 4 — woke up at 5 AM
+  { id: 4, dur: 1.85, text: 'He woke up at 5 AM.', sfx: [{ t: 0.1, n: 'ding' }, { t: 0.95, n: 'yawn' }],
+    frame(C, t, d) {
+      C.light('indoorNight', [O.x, 0, O.z], 12); C.room.lamp.intensity = 10;
+      if (t < 0.95) { alarmClose(C, '5:00', t, 0.95); return; }
+      const up = easeOut(seg(t, 0.95, 1.5));
+      const m = C.show(C.cast.mike, BED[0], BED[1] + 1.0, 0, 1.0); m.body.rotation.x = lerp(-PI / 2, -0.1, up); m.legL.rotation.x = m.legR.rotation.x = lerp(0, -PI / 2 + 0.1, up);
+      m.armL.rotation.z = -2.4 * up; m.armR.rotation.z = 2.4 * up; m.face('sleep');
+      const hp = C.headPos(m); C.cam([hp.x + 2.8, hp.y + 0.4, hp.z + 1.6], [hp.x, hp.y - 0.4, hp.z], 50);
+    } },
+  // 5 — same oatmeal
+  { id: 5, dur: 1.76, text: 'He ate the same oatmeal.', sfx: [{ t: 0.5, n: 'tap' }],
+    frame(C, t, d) {
+      C.light('indoorDay', [K.x, 0, K.z + 1], 10);
+      const m = C.show(C.cast.mike, K.x, K.z + 2.55, PI, 0); m.sit(1.2); m.face('blank');
+      const sp = Math.max(0, Math.sin(t * 5)); m.armR.rotation.x = lerp(-1.1, -2.0, sp); m.armR.rotation.z = lerp(0.1, 0.5, sp); m.armL.rotation.x = -1.0;
+      C.hold(m, C.props.spoon, 'R', 0, -0.05, 0.12, PI / 2, 0, 0);
+      C.put(C.props.bowl, K.x, 2.02, K.z + 1.45);
+      const hp = C.headPos(m); C.cam([hp.x + 0.9, hp.y + 0.2, hp.z - 2.2], [hp.x, hp.y - 0.4, hp.z], 48);
+    } },
+  // 6 — same crossword
+  { id: 6, dur: 2.16, text: 'He solved the same crossword.', sfx: [{ t: 0.3, n: 'click' }, { t: 1.2, n: 'click' }],
+    frame(C, t, d) {
+      C.light('indoorDay', [K.x, 0, K.z + 1], 10);
+      C.put(C.props.crossword, K.x + 0.3, 2.03, K.z + 1.3);
+      C.put(C.props.pen, K.x + 0.25 + Math.sin(t * 7) * 0.12, 2.18, K.z + 1.3 + Math.cos(t * 5) * 0.08, -0.6, 0, 0.3);
+      C.cam([K.x + 0.3, 3.3, K.z + 1.75], [K.x + 0.3, 2.03, K.z + 1.25], 46);
+    } },
+  // 7 — 7 PM in bed
+  { id: 7, dur: 2.76, text: 'And at 7 PM, he was in bed.', sfx: [{ t: 0.3, n: 'ding' }, { t: 1.55, n: 'click' }],
+    frame(C, t, d) {
+      if (t < 1.45) { C.light('indoorNight', [O.x, 0, O.z], 12); alarmClose(C, '7:00', t, 1.45); return; }
+      roomNight(C); C.room.lamp.intensity = t > 1.6 ? 0 : 10; C.hemi.intensity = 0.4;
+      const m = inBed(C, 'sleep');
+      const hp = C.headPos(m); C.cam([hp.x + 2.2, hp.y + 2.4, hp.z + 2.4], [hp.x, hp.y - 0.2, hp.z + 0.6], 50);
+    } },
+  // 8 — so boring even his plants fell asleep
+  { id: 8, dur: 4.03, text: 'Michael was so boring, even his plants fell asleep.', sfx: [{ t: 2.7, n: 'snore' }],
+    frame(C, t, d) {
+      if (t < 1.7) {
+        living(C); const m = onSofa(C, C.cast.mike, 'blank');
+        C.hold(m, C.props.crossword, 'L', 0, -0.05, 0.3, PI / 2.4, 0, 0); C.props.crossword.scale.setScalar(0.6);
+        const hp = C.headPos(m); C.camLerp(t / 1.7, [hp.x, hp.y - 0.1, hp.z - 2.0, hp.x, hp.y - 0.2, hp.z, 46], [hp.x, hp.y - 0.1, hp.z - 1.7, hp.x, hp.y - 0.2, hp.z, 46]);
+        return;
+      }
+      roomDay(C);
+      const P = [O.x + 1.4, 0, O.z - 3.8];
+      C.put(C.props.plant, ...P);
+      const droop = easeInOut(seg(t, 2.6, 3.2));
+      C.props.plant.userData.stems.forEach((st, i) => { st.rotation.z = lerp(0.25, 1.5 + (i % 2) * 0.2, droop); });
+      C.props.zs.forEach((z, i) => { const lt = ((t - 2.9) * 0.8 + i / 3) % 1; if (t < 2.9) return; C.put(z, P[0] + 0.3 + lt * 0.5, 1.2 + lt * 1.2, P[2] + 0.2); z.material.opacity = Math.sin(lt * PI); });
+      C.cam([P[0] + 0.4, 1.2, P[2] + 2.6], [P[0], 0.7, P[2]], 46);
+    } },
+  // 9 — grandson Ranjid visits
+  { id: 9, dur: 3.5, text: 'One Sunday, his grandson Ranjid came to visit.', sfx: [{ t: 0.2, n: 'door' }],
+    frame(C, t, d) {
+      living(C);
+      onSofa(C, C.cast.mike, 'blank');
+      const rx = lerp(L.x + 6.5, L.x + 2.4, easeOut(seg(t, 0.2, 2.4)));
+      const r = C.show(C.cast.ranjid, rx, L.z + 1.4, -PI / 2, 0); if (t < 2.4) r.walk(t * 7.5, 1 - seg(t, 2.0, 2.4));
+      r.face('smile'); if (t > 2.4) { r.armR.rotation.z = 2.6 + Math.sin(t * 10) * 0.3; }
+      C.camLerp(easeInOut(t / d), [L.x - 0.6, 2.8, L.z - 3.0, L.x + 3.0, 1.8, L.z + 1.6, 52], [L.x + 0.2, 2.6, L.z - 2.2, L.x + 2.8, 1.9, L.z + 1.6, 52]);
+      C.ov.nameTag = seg(t, 1.83, 2.15); C.ov.nameText = ['RANJID'];
+    } },
+  // 10 — looked at the cardigan, the slippers, the crossword
+  { id: 10, dur: 4.91, text: 'Ranjid looked at Michael\'s cardigan, his slippers, and his crossword, and said:', sfx: [{ t: 1.34, n: 'whoosh' }, { t: 2.35, n: 'whoosh' }, { t: 3.39, n: 'whoosh' }],
+    frame(C, t, d) {
+      living(C);
+      const m = onSofa(C, C.cast.mike, 'blank');
+      C.hold(m, C.props.crossword, 'L', 0, -0.05, 0.3, PI / 2.4, 0, 0); C.props.crossword.scale.setScalar(0.6);
+      const r = C.show(C.cast.ranjid, L.x + 2.4, L.z + 1.4, -PI / 2 - 0.4, 0); r.face('confused');
       const hp = C.headPos(m);
-      C.camLerp(easeInOut(t / d), [hp.x + 2.6, hp.y + 1.6, hp.z + 0.4, (hp.x + rp[0]) / 2, hp.y, (hp.z + rp[2]) / 2, 50], [hp.x + 2.0, hp.y + 1.3, hp.z + 0.3, (hp.x + rp[0]) / 2, hp.y, (hp.z + rp[2]) / 2, 50]);
+      if (t < 1.3) { const rp = C.headPos(r); C.cam([rp.x - 1.4, rp.y, rp.z - 0.8], [rp.x, rp.y - 0.05, rp.z], 46); }
+      else if (t < 2.3) C.cam([hp.x - 0.3, hp.y - 0.9, hp.z - 1.4], [hp.x, hp.y - 0.95, hp.z - 0.1], 46);        // cardigan
+      else if (t < 3.35) C.cam([SOFA[0] + 1.1, 1.5, SOFA[1] - 2.5], [SOFA[0], 1.0, SOFA[1] - 1.05], 44);           // slippers
+      else if (t < 3.95) C.cam([hp.x + 0.2, hp.y - 0.3, hp.z - 1.4], [hp.x - 0.2, hp.y - 0.9, hp.z - 0.4], 44);    // crossword
+      else { const rp = C.headPos(r); C.cam([rp.x - 1.3, rp.y, rp.z - 0.7], [rp.x, rp.y - 0.05, rp.z], 46); }
     } },
-  // 5 — wakes up at 2 PM
-  { id: 5, dur: 2.6, text: 'Every morning, Rajesh woke up at *2 PM,*', sfx: [{ t: 0.9, n: 'yawn' }, { t: 1.95, n: 'tick' }],
+  // 11 — "Grandpa... you're kind of... old."
+  { id: 11, dur: 3.47, text: '“Grandpa… you’re kind of… old.”', music: 'silence',
     frame(C, t, d) {
-      day(C);
-      C.put(C.props.clock, BED[0] + 1.9, 1.25, BED[1] - 2.2, 0, -0.4, 0); C.props.clock.userData.draw('2:00', true);
-      if (t > 1.9) C.camLerp(easeOut(seg(t, 1.9, d)), [BED[0] + 2.6, 1.6, BED[1] - 0.2, BED[0] + 1.9, 1.25, BED[1] - 2.2, 40], [BED[0] + 2.45, 1.5, BED[1] - 0.6, BED[0] + 1.9, 1.25, BED[1] - 2.2, 40]);
-      else {
-        const up = easeOut(seg(t, 0.9, 1.6));
-        const m = C.show(C.cast.rj, BED[0], BED[1] + 1.0, 0, 1.05); m.body.rotation.x = lerp(-PI / 2, -0.1, up); m.legL.rotation.x = m.legR.rotation.x = lerp(0, -PI / 2 + 0.1, up);
-        m.armL.rotation.z = -2.6 * up; m.armR.rotation.z = 2.6 * up; m.face(t > 0.9 ? 'sleep' : 'blank');
-        const hp = C.headPos(m); C.cam([hp.x + 2.8, hp.y + 0.3, hp.z + 1.6], [hp.x, hp.y - 0.5, hp.z], 50);
+      living(C);
+      const r = C.show(C.cast.ranjid, L.x + 2.4, L.z + 1.4, -PI / 2 - 0.4, 0);
+      if ((t > 0.15 && t < 0.8) || (t > 1.25 && t < 2.1) || (t > 2.45 && t < 2.95)) talk(r, t, 'talk', 'confused', 6); else r.face('confused');
+      r.armR.rotation.x = -0.4; r.neck.rotation.z = 0.12;
+      closeFace(C, r, 2.2, 0.35);
+    } },
+  // 12 — dropped his pen
+  { id: 12, dur: 1.7, text: 'Michael dropped his pen.', sfx: [{ t: 0.95, n: 'pendrop' }],
+    frame(C, t, d) {
+      living(C); C.ov.gray = 0.35;
+      const m = onSofa(C, C.cast.mike, 'shock'); m.armR.rotation.x = -1.0;
+      const hand = new C.THREE.Vector3(); m.armR.userData.hand.getWorldPosition(hand);
+      const ft = seg(t, 0.2, 1.0);
+      C.put(C.props.pen, hand.x, lerp(hand.y, 0.05, ft * ft), hand.z, ft * 6, 0, ft * 3);
+      const hp = C.headPos(m); C.cam([hp.x + 1.6, hp.y - 0.4, hp.z - 2.6], [hp.x, hp.y - 1.0, hp.z - 0.4], 50);
+    } },
+  // 13 — nobody had ever called him old
+  { id: 13, dur: 2.15, text: 'Nobody had ever called him old.', sfx: [{ t: 0.1, n: 'zoom' }, { t: 0.3, n: 'bass' }],
+    frame(C, t, d) {
+      living(C);
+      const m = onSofa(C, C.cast.mike, 'shock');
+      const hp = C.headPos(m);
+      const z = easeOut(seg(t, 0.05, 0.3));
+      C.camLerp(z, [hp.x, hp.y, hp.z - 2.4, hp.x, hp.y, hp.z, 48], [hp.x, hp.y + 0.03, hp.z - 1.05, hp.x, hp.y + 0.03, hp.z, 40]);
+      C.ov.shakeX = noise1(t * 40, 2) * 0.012; C.ov.vignette = 0.5;
+    } },
+  // 14 — not even his doctor (flashback)
+  { id: 14, dur: 1.85, text: 'Not even his doctor.', sfx: [{ t: 0.05, n: 'whoosh' }],
+    frame(C, t, d) {
+      living(C); C.ov.gray = 0.8;
+      const dc = C.show(C.cast.doc, L.x + 2.2, L.z + 1.0, -PI / 2 - 0.3, 0); dc.face('smile');
+      dc.armR.rotation.x = -1.4; dc.armR.rotation.z = Math.sin(t * 4) * 0.1;
+      if (t > 0.6 && t < 1.4) talk(dc, t, 'talk', 'smile', 6);
+      closeFace(C, dc, 2.2, 0.3, 48);
+    } },
+  // 15 — that night he couldn't sleep
+  { id: 15, dur: 2.37, text: 'That night, Michael couldn\'t sleep.', music: 'tension', sfx: [{ t: 0.1, n: 'cricket' }],
+    frame(C, t, d) {
+      roomNight(C); C.room.lamp.intensity = 0; C.hemi.intensity = 0.45;
+      const m = inBed(C, 'shock');
+      const hp = C.headPos(m); C.camLerp(t / d, [hp.x, hp.y + 2.4, hp.z + 0.3, hp.x, hp.y, hp.z, 46], [hp.x, hp.y + 1.8, hp.z + 0.2, hp.x, hp.y, hp.z, 46]);
+    } },
+  // 16 — stayed up past 7 PM
+  { id: 16, dur: 4.2, text: 'For the first time in forty years, he stayed up past 7 PM.', sfx: [{ t: 2.95, n: 'ding' }, { t: 3.05, n: 'bass' }],
+    frame(C, t, d) {
+      C.light('indoorNight', [O.x, 0, O.z], 12); C.room.lamp.intensity = 5; C.hemi.intensity = 0.85;
+      if (t < 2.9) {
+        const m = C.show(C.cast.mike, BED[0], BED[1] + 1.0, 0, 1.0); m.body.rotation.x = -0.15; m.legL.rotation.x = m.legR.rotation.x = -PI / 2 + 0.15; m.face('shock');
+        C.put(C.props.alarm, ...ALARM); C.props.alarm.userData.draw('7:00');
+        const hp = C.headPos(m); C.fill.intensity = 10; C.fill.color.set('#9fb4ff'); C.fill.position.set(hp.x + 0.5, hp.y + 0.6, hp.z + 2.2);
+        C.camLerp(easeInOut(t / 2.9), [hp.x + 0.8, hp.y + 0.3, hp.z + 4.2, hp.x, hp.y - 0.3, hp.z, 50], [hp.x + 0.5, hp.y + 0.2, hp.z + 3.0, hp.x, hp.y - 0.2, hp.z, 50]);
+      } else {
+        alarmClose(C, '7:01', t - 2.9, d - 2.9);
+        C.ov.flash = 0.45 * (1 - seg(t, 2.95, 3.3));
+        C.props.confetti.slice(0, 30).forEach((p) => { const [a, b, c2, e] = p.userData.seed; const lt = t - 2.95; C.put(p, ALARM[0] + (a - 0.5) * 1.4, ALARM[1] + 1.0 - ((lt * (0.4 + b) + e) % 1.2), ALARM[2] + 0.3 + (c2 - 0.5) * 0.4, lt * 5 * a, lt * 3 * b, lt * 4); p.scale.setScalar(0.4); });
       }
     } },
-  // 6 — opened TikTok, lost three hours, stair videos
-  { id: 6, dur: 5.0, text: 'opened TikTok, and immediately lost *three hours* watching videos of people *falling down stairs.*', sfx: [{ t: 0.3, n: 'tap' }, { t: 2.2, n: 'whoosh' }, { t: 4.6, n: 'laughs' }],
+  // 17 — took the old phone, watched one video
+  { id: 17, dur: 3.22, text: 'He took Ranjid\'s old phone and watched one video.', music: 'groove', sfx: [{ t: 0.5, n: 'tap' }, { t: 2.14, n: 'ding' }],
     frame(C, t, d) {
-      if (t < 2.2) { day(C); C.phoneScr.draw(t < 0.3 ? 'off' : 'feed', t); const m = lying(C, C.cast.rj, t, 'smile'); const hp = C.headPos(m); C.cam([hp.x + 0.5, hp.y + 1.8, hp.z + 1.2], [hp.x, hp.y + 0.6, hp.z + 0.5], 46); }
-      else if (t < 3.25) { day(C); C.ov.card = { big: '3 HOURS', small: 'LATER', k: seg(t, 2.2, 3.25) }; C.cam([R.x, 3, R.z + 4], [R.x, 2, R.z], 50); }
-      else if (t < 4.7) { phoneClose(C, 'feed', Math.max(0, t - 4.2)); }
-      else { day(C); C.phoneScr.draw('feed', t); const m = lying(C, C.cast.rj, t, 'laugh'); m.body.position.y = Math.abs(Math.sin(t * 12)) * 0.05; const hp = C.headPos(m); C.cam([hp.x + 0.8, hp.y + 1.6, hp.z + 1.0], [hp.x, hp.y, hp.z + 0.3], 46); }
-    } },
-  // 7 — mother: what are you doing with your life?
-  { id: 7, dur: 3.6, text: 'His mother would ask, *“Rajesh, what are you doing with your life?”*', sfx: [{ t: 0.1, n: 'door' }],
-    frame(C, t, d) {
-      day(C);
-      const mm = doorMom(C, t);
-      mm.armL.rotation.z = 0.9; mm.armR.rotation.z = -0.9; mm.armL.rotation.x = mm.armR.rotation.x = 0.4;
-      if (t > 1.55 && t < 3.85) { talk(mm, t, 'talk', 'angry', 7); mm.armR.rotation.x = -1.2; mm.armR.rotation.z = 0; } else mm.face('angry');
-      const hp = C.headPos(mm);
-      C.camLerp(easeInOut(t / d), [hp.x - 3.6, hp.y - 0.1, hp.z - 1.0, hp.x, hp.y - 0.3, hp.z, 48], [hp.x - 2.6, hp.y - 0.1, hp.z - 0.7, hp.x, hp.y - 0.2, hp.z, 48]);
-    } },
-  // 8 — "I'm building my aura, Mom."
-  { id: 8, dur: 3.0, text: 'And he would respond, *“I’m building my aura, Mom.”*', sfx: [{ t: 1.55, n: 'aura' }],
-    frame(C, t, d) {
-      day(C); C.room.lamp.intensity = 20; C.room.lamp.color.set('#b14dff');
-      const m = C.show(C.cast.rj, BED[0] + 0.6, BED[1] + 0.4, PI / 2, 0); m.sit(1.0);
-      m.armR.rotation.x = -2.6; m.armR.rotation.z = -0.3; m.armL.rotation.x = -0.4; // hand behind head
-      m.face(t > 1.5 ? 'shades' : 'smile');
-      const hp = C.headPos(m);
-      if (t > 1.5) { C.put(C.props.aura, hp.x - 0.4, hp.y - 0.6, hp.z); const s = 5 * easeOut(seg(t, 1.5, 2.0)) * (1 + Math.sin(t * 5) * 0.05); C.props.aura.scale.set(s, s, 1); }
-      C.camLerp(easeInOut(t / d), [hp.x + 3.0, hp.y - 0.4, hp.z + 0.6, hp.x, hp.y - 0.5, hp.z, 50], [hp.x + 2.4, hp.y - 0.3, hp.z + 0.4, hp.x, hp.y - 0.4, hp.z, 50]);
-    } },
-  // 9 — nobody knew what that meant
-  { id: 9, dur: 2.2, text: 'Nobody knew what that meant.', sfx: [{ t: 0.1, n: 'cricket' }],
-    frame(C, t, d) {
-      day(C);
-      const mm = doorMom(C, 1); mm.face('confused'); mm.neck.rotation.z = 0.25;
-      const hp = C.headPos(mm);
-      C.props.qs.forEach((q, i) => { C.put(q, hp.x - 0.3, hp.y + 0.7 + i * 0.05 + Math.sin(t * 4 + i) * 0.05, hp.z - 0.6 + i * 0.6); const s = 0.6 * backOut(seg(t, 0.1 + i * 0.15, 0.4 + i * 0.15)); q.scale.set(s, s, 1); });
-      C.cam([hp.x - 2.8, hp.y + 0.1, hp.z - 0.6], [hp.x, hp.y + 0.2, hp.z], 50);
-    } },
-  // 10 — decides to become rich
-  { id: 10, dur: 3.0, text: 'One day, Rajesh decided he was going to *become rich.*', sfx: [{ t: 2.68, n: 'cash' }],
-    frame(C, t, d) {
-      day(C);
-      const m = C.show(C.cast.rj, R.x + 0.5, R.z + 0.5, 0.3, 0);
-      const hit = t > 2.65; m.face(hit ? 'money' : 'serious');
-      if (hit) { m.armL.rotation.x = m.armR.rotation.x = -2.8; m.armL.rotation.z = 0.3; m.armR.rotation.z = -0.3; }
-      const hp = C.headPos(m);
-      const z = easeOut(seg(t, 2.65, 2.9));
-      C.camLerp(hit ? z : 0, [hp.x + 0.8, hp.y - 0.6, hp.z + 4.0, hp.x, hp.y - 0.6, hp.z, 50], [hp.x + 0.2, hp.y, hp.z + 1.5, hp.x, hp.y, hp.z, 46]);
-      C.ov.flash = hit ? 0.45 * (1 - seg(t, 2.65, 2.95)) : 0;
-    } },
-  // 11 — one motivational video -> CEO
-  { id: 11, dur: 4.4, text: 'He watched *one motivational video* and immediately started calling himself a *CEO.*', music: 'groove', sfx: [{ t: 0.1, n: 'tap' }, { t: 4.1, n: 'bass' }],
-    frame(C, t, d) {
-      if (t < 2.3) { phoneClose(C, 'motivation', t, seg(t, 0, 2.3) * 0.1); return; }
-      C.light('indoorDay', [R.x, 0, R.z], 12); C.room.winP.material.color.setRGB(7, 7, 6);
-      const m = C.show(C.cast.ceo, R.x + 0.5, R.z + 0.5, 0.2, 0); m.face('shades');
-      m.armL.rotation.x = -0.4; m.armL.rotation.z = 0.7; m.armR.rotation.x = -0.4; m.armR.rotation.z = -0.7;
-      const hp = C.headPos(m);
-      C.camLerp(easeOut(seg(t, 2.3, d)), [hp.x + 0.4, 0.6, hp.z + 4.2, hp.x, hp.y - 0.7, hp.z, 54], [hp.x + 0.3, 0.7, hp.z + 3.4, hp.x, hp.y - 0.6, hp.z, 54]);
-      C.ov.nameTag = seg(t, 4.08, 4.4); C.ov.nameText = ['RAJESH KUMAR', 'CEO & FOUNDER']; C.ov.nameY = 0.13;
-    } },
-  // 12 — selling absolutely nothing
-  { id: 12, dur: 3.0, text: 'His business? Selling *absolutely nothing.*',
-    frame(C, t, d) {
-      day(C); C.laptopScr.draw('site', t);
-      C.put(C.props.laptop, R.x + 50, 1.0, R.z, 0, 0, 0);
-      C.camLerp(easeInOut(t / d), [R.x + 50, 1.6, R.z + 2.3, R.x + 50, 1.45, R.z - 0.45, 44], [R.x + 50, 1.55, R.z + 1.9, R.x + 50, 1.45, R.z - 0.45, 44]);
-      C.scene.background = null;
-    } },
-  // 13 — website, logo, LinkedIn
-  { id: 13, dur: 3.4, text: 'He created a *website,* a *logo,* and a *LinkedIn account.*', sfx: [{ t: 0.7, n: 'click' }, { t: 1.6, n: 'click' }, { t: 2.5, n: 'click' }],
-    frame(C, t, d) {
-      day(C);
-      const cut = t < 1.45 ? 0 : t < 2.35 ? 1 : 2;
-      C.laptopScr.draw(['site', 'logo', 'profile'][cut], t);
-      C.put(C.props.laptop, R.x + 50, 1.0, R.z, 0, 0, 0);
-      C.cam([R.x + 50 + [0.25, -0.2, 0.1][cut], 1.5, R.z + 1.9], [R.x + 50, 1.45, R.z - 0.45], 44);
-      C.scene.background = null;
-    } },
-  // 14 — first employee: the cousin, paid in fast food
-  { id: 14, dur: 3.8, text: 'His first employee was his *cousin,* who got paid in *McDonald’s.*', sfx: [{ t: 2.7, n: 'crunch' }],
-    frame(C, t, d) {
-      C.light('indoorDay', [L.x, 0, L.z], 12); C.living.ceil.intensity = 20;
-      C.put(C.props.desk, L.x + 3.0, 0, L.z - 2.4, 0, 0, 0);
-      C.laptopScr.draw('site', t); C.put(C.props.laptop, L.x + 2.6, 1.86, L.z - 2.5, 0, 0, 0);
-      const c = C.show(C.cast.cousin, L.x + 3.0, L.z - 1.2, PI, 0); c.sit(1.05 / 0.82);
-      c.armL.rotation.x = -1.4; c.armR.rotation.x = lerp(-1.2, -2.2, Math.max(0, Math.sin(t * 5)));
-      c.face(t > 2.6 ? 'laugh' : 'smile');
-      C.put(C.props.fries, L.x + 3.6, 1.86, L.z - 2.2); C.put(C.props.burger, L.x + 3.2, 1.86, L.z - 1.95);
-      const b = C.show(C.cast.ceo, L.x + 1.2, L.z - 0.6, PI / 2 + 0.3, 0); b.face('smile'); b.armR.rotation.x = -1.5;
-      C.camLerp(easeInOut(t / d), [L.x + 1.6, 2.6, L.z + 3.4, L.x + 2.6, 1.9, L.z - 1.4, 50], [L.x + 2.0, 2.5, L.z + 2.6, L.x + 2.8, 1.9, L.z - 1.4, 50]);
-    } },
-  // 15 — two weeks later: bankrupt
-  { id: 15, dur: 3.6, text: 'After two weeks, Rajesh announced that his company was going *bankrupt.*', sfx: [{ t: 3.25, n: 'fail' }],
-    frame(C, t, d) {
-      C.light('indoorDay', [L.x, 0, L.z - 3], 12); C.living.ceil.intensity = 20;
-      C.screenLiving.draw('chart', Math.max(0, t - 1.8)); C.living.tv.userData.light.intensity = 10;
-      const b = C.show(C.cast.ceo, L.x + 2.6, L.z - 3.8, -0.4, 0);
-      b.armL.rotation.x = -1.4; b.armL.rotation.z = -0.6; b.face(t > 3.2 ? 'sad' : 'smile');
-      if (t > 1.3 && t < 3.2) talk(b, t, 'talk', 'smile', 6);
-      C.camLerp(easeInOut(t / d), [L.x + 1.4, 2.6, L.z + 2.8, L.x + 1.1, 2.3, L.z - 4.6, 54], [L.x + 1.4, 2.6, L.z + 2.0, L.x + 1.1, 2.4, L.z - 4.6, 54]);
-    } },
-  // 16 — the investors were confused
-  { id: 16, dur: 2.0, text: 'The *investors* were confused.',
-    frame(C, t, d) {
-      C.light('indoorDay', [L.x, 0, L.z - 3], 12); C.living.ceil.intensity = 20;
-      C.screenLiving.draw('chart', 3);
-      const b = C.show(C.cast.ceo, L.x + 2.6, L.z - 3.8, 0, 0); b.face('confused'); b.neck.rotation.z = Math.sin(t * 3) * 0.1;
-      const hp = C.headPos(b);
-      C.cam([hp.x - 0.3, hp.y - 0.4, hp.z + 3.4], [hp.x, hp.y - 0.3, hp.z], 46);
-    } },
-  // 17 — there were no investors
-  { id: 17, dur: 2.4, text: 'There were *no investors.*', music: 'silence', sfx: [{ t: 0.05, n: 'cricket' }, { t: 1.2, n: 'bass' }],
-    frame(C, t, d) {
-      C.light('indoorDay', [L.x, 0, L.z], 12); C.living.ceil.intensity = 20;
-      C.screenLiving.draw('chart', 3);
-      C.props.chairs.forEach((ch, i) => C.put(ch, L.x - 0.6 + (i % 3) * 1.5, 0, L.z - 1.9 + Math.floor(i / 3) * 1.4, 0, PI, 0));
-      const b = C.show(C.cast.ceo, L.x + 2.6, L.z - 3.8, 0, 0); b.face('blank');
-      C.camLerp(t / d, [L.x - 1.6, 4.4, L.z + 2.0, L.x + 1.2, 1.2, L.z - 2.2, 52], [L.x - 1.2, 4.2, L.z + 1.6, L.x + 1.2, 1.2, L.z - 2.2, 52]);
-    } },
-  // 18 — the only customer: his mother, by accident
-  { id: 18, dur: 4.2, text: 'His only customer was his *mother,* who had *accidentally subscribed* to his website.', music: 'groove', sfx: [{ t: 3.05, n: 'ding' }],
-    frame(C, t, d) {
-      if (t < 2.3 || t > 3.9) {
-        C.light('indoorDay', [L.x, 0, L.z + 2], 12); C.living.ceil.intensity = 20;
-        const mm = C.show(C.cast.mom, L.x - 0.6, L.z + 3.2, PI, 0); mm.sit(1.12 / 0.93);
-        mm.armR.rotation.x = -1.3; mm.armR.rotation.z = 0.25; C.hold(mm, C.props.phone, 'R', 0, 0.05, 0.08, -PI / 2 + 0.3, PI, 0);
-        C.phoneScr.draw('feed', t);
-        mm.face(t > 3.9 ? 'shock' : 'blank');
-        const hp = C.headPos(mm);
-        C.cam([hp.x + 0.6, hp.y + 0.1, hp.z - 2.4], [hp.x, hp.y - 0.4, hp.z], 48);
-      } else { phoneClose(C, 'sub', Math.max(0, t - 3.0)); }
-    } },
-  // 19 — didn't give up, looks into the camera
-  { id: 19, dur: 3.2, text: 'But Rajesh *didn’t give up.* He looked into the camera and said:', music: 'soft', sfx: [{ t: 2.2, n: 'zoom' }],
-    frame(C, t, d) {
-      C.light('indoorDay', [L.x, 0, L.z - 3], 12); C.living.ceil.intensity = 20;
-      const b = C.show(C.cast.ceo, L.x + 2.6, L.z - 3.8, lerp(-0.6, 0, easeInOut(seg(t, 2.0, 2.5))), 0); b.face(t > 1.3 ? 'serious' : 'sad');
-      const hp = C.headPos(b);
-      const z = easeInOut(seg(t, 2.2, 2.8));
-      C.camLerp(z, [hp.x + 0.2, hp.y - 0.2, hp.z + 3.0, hp.x, hp.y - 0.3, hp.z, 50], [hp.x, hp.y, hp.z + 1.4, hp.x, hp.y, hp.z, 46]);
-    } },
-  // 20 — "Every successful businessman has to start somewhere."
-  { id: 20, dur: 3.0, text: '“Every successful businessman has to *start somewhere.*”',
-    frame(C, t, d) {
-      C.light('indoorDay', [L.x, 0, L.z - 3], 12); C.living.ceil.intensity = 20; C.fill.intensity = 30; C.fill.color.set('#ffb070');
-      const b = C.show(C.cast.ceo, L.x + 2.6, L.z - 3.8, 0, 0);
-      if (t > 0.15 && t < d - 0.2) talk(b, t, 'ktalk', 'serious', 6); else b.face('serious');
-      const hp = C.headPos(b); C.fill.position.set(hp.x - 1.5, hp.y + 1, hp.z - 1.2);
-      C.camLerp(t / d, [hp.x, hp.y, hp.z + 1.4, hp.x, hp.y, hp.z, 46], [hp.x, hp.y, hp.z + 1.15, hp.x, hp.y, hp.z, 44]);
-    } },
-  // 21 — then he opened TikTok...
-  { id: 21, dur: 2.2, text: 'Then he opened TikTok…', sfx: [{ t: 0.75, n: 'tap' }],
-    frame(C, t, d) {
-      C.light('indoorDay', [L.x, 0, L.z - 3], 12); C.living.ceil.intensity = 20;
-      const b = C.show(C.cast.ceo, L.x + 2.6, L.z - 3.8, 0, 0); b.face(t > 0.75 ? 'crazy' : 'serious');
-      b.armR.rotation.x = -1.5; b.armR.rotation.z = 0.35; C.phoneScr.draw(t > 0.75 ? 'brainrot' : 'off', t);
-      C.hold(b, C.props.phone, 'R', -0.05, 0.05, 0.1, -PI / 2, PI, 0);
-      const hp = C.headPos(b);
-      C.cam([hp.x + 0.6, hp.y - 0.2, hp.z + 2.0], [hp.x, hp.y - 0.5, hp.z], 46);
-    } },
-  // 22 — six hours of brainrot
-  { id: 22, dur: 3.4, text: 'And spent the next *six hours* watching *brainrot.*', music: 'hype', sfx: [{ t: 0.05, n: 'whoosh' }, { t: 1.6, n: 'brainrot' }],
-    frame(C, t, d) {
-      if (t < 1.55) { night(C); C.ov.card = { big: '6 HOURS', small: 'LATER', k: seg(t, 0.3, 1.55) }; C.cam([R.x, 3, R.z + 4], [R.x, 2, R.z], 50); return; }
-      night(C); C.hemi.intensity = 0.3;
-      const cols = ['#ff3bd4', '#39ff88', '#ffd23f', '#3bb2ff', '#ff6b3b']; const k = Math.floor(t * 8);
-      C.fill.intensity = 22; C.fill.color.set(cols[k % 5]);
-      const m = C.show(C.cast.rj, CHAIR[0], CHAIR[1] + 0.15, PI, 0); m.sit(1.27); m.face('crazy'); m.torso.rotation.x = 0.25;
-      m.armR.rotation.x = -1.5; m.armR.rotation.z = 0.35; C.phoneScr.draw('brainrot', t);
+      C.light('indoorNight', [O.x, 0, O.z], 12); C.room.lamp.intensity = 0; C.hemi.intensity = 0.35;
+      const m = C.show(C.cast.mike, BED[0], BED[1] + 1.0, 0, 1.0); m.body.rotation.x = -0.15; m.legL.rotation.x = m.legR.rotation.x = -PI / 2 + 0.15; m.face(t > 2.1 ? 'crazy' : 'blank');
+      m.armR.rotation.x = -1.4; m.armR.rotation.z = 0.35; C.phoneScr.draw(t > 0.5 ? 'dance' : 'off', t);
       C.hold(m, C.props.phone, 'R', -0.05, 0.05, 0.1, -PI / 2, PI, 0);
-      const hp = C.headPos(m); C.fill.position.set(hp.x, hp.y, hp.z - 0.8);
-      C.camLerp(easeInOut(seg(t, 1.55, d)), [hp.x + 0.5, hp.y, hp.z - 2.2, hp.x, hp.y - 0.1, hp.z, 48], [hp.x + 0.2, hp.y, hp.z - 1.4, hp.x, hp.y, hp.z, 46]);
+      const hp = C.headPos(m); C.fill.intensity = 5; C.fill.color.set('#9fb4ff'); C.fill.position.set(hp.x, hp.y, hp.z + 0.8);
+      C.camLerp(easeInOut(t / d), [hp.x + 0.6, hp.y, hp.z + 3.0, hp.x, hp.y - 0.2, hp.z, 48], [hp.x + 0.4, hp.y, hp.z + 2.4, hp.x, hp.y - 0.2, hp.z, 48]);
+      if (t > 2.14) C.ov.counter = { n: 1, k: seg(t, 2.14, 2.5) };
     } },
-  // 23 — mother walks in
-  { id: 23, dur: 2.8, text: 'His mother walked in, looked at him, and said:', music: 'silence', sfx: [{ t: 0.1, n: 'door' }],
+  // 18 — then ten
+  { id: 18, dur: 1.21, text: 'Then ten.', sfx: [{ t: 0.4, n: 'ding' }],
     frame(C, t, d) {
-      night(C); C.screenRoom.draw('off', 0);
-      const m = C.show(C.cast.rj, CHAIR[0], CHAIR[1] + 0.15, PI, 0); m.sit(1.27); m.face('crazy'); m.armR.rotation.x = -1.5; m.armR.rotation.z = 0.35;
-      C.phoneScr.draw('brainrot', t); C.hold(m, C.props.phone, 'R', -0.05, 0.05, 0.1, -PI / 2, PI, 0);
-      const mm = doorMom(C, t); mm.face('angry'); mm.armL.rotation.z = 0.9; mm.armR.rotation.z = -0.9; mm.armL.rotation.x = mm.armR.rotation.x = 0.4;
-      C.cam([R.x - 2.6, 3.0, R.z - 3.2], [R.x + 3.6, 2.2, R.z + 0.9], 54);
+      C.light('indoorNight', [O.x, 0, O.z], 12); C.room.lamp.intensity = 0; C.hemi.intensity = 0.35;
+      const m = C.show(C.cast.mike, BED[0], BED[1] + 1.0, 0, 1.0); m.body.rotation.x = -0.15; m.legL.rotation.x = m.legR.rotation.x = -PI / 2 + 0.15; m.face('crazy');
+      m.armR.rotation.x = -1.4; m.armR.rotation.z = 0.35; C.phoneScr.draw('dance', t + 5); C.hold(m, C.props.phone, 'R', -0.05, 0.05, 0.1, -PI / 2, PI, 0);
+      const hp = C.headPos(m); C.fill.intensity = 6; C.fill.color.set('#ff7ad9'); C.fill.position.set(hp.x, hp.y, hp.z + 0.8);
+      C.cam([hp.x - 0.5, hp.y + 0.1, hp.z + 2.0], [hp.x, hp.y - 0.1, hp.z], 46);
+      C.ov.counter = { n: t > 0.4 ? 10 : 1, k: 1 };
     } },
-  // 24 — "Your father was right. You are not the CEO."
-  { id: 24, dur: 3.6, text: '“Your father was right. *You are not the CEO.*”', music: 'silence', sfx: [{ t: 2.6, n: 'bass' }],
+  // 19 — then three hundred
+  { id: 19, dur: 1.44, text: 'Then three hundred.', sfx: [{ t: 0.4, n: 'ding' }, { t: 0.65, n: 'ding' }],
     frame(C, t, d) {
-      night(C);
-      const mm = doorMom(C, 1);
-      if ((t > 0.15 && t < 1.2) || (t > 1.65 && t < 3.2)) talk(mm, t, 'talk', 'angry', 6); else mm.face('angry');
-      const hp = C.headPos(mm);
-      C.camLerp(t < 2.55 ? (t / 2.55) * 0.3 : 0.3 + 0.7 * easeOut(seg(t, 2.55, 2.75)), [hp.x - 1.8, hp.y, hp.z - 0.7, hp.x, hp.y, hp.z, 46], [hp.x - 0.95, hp.y, hp.z - 0.35, hp.x, hp.y, hp.z, 42]);
-      if (t > 2.55) C.ov.shakeX = noise1(t * 40, 7) * 0.02 * (1 - seg(t, 2.55, 3.2));
+      C.light('indoorNight', [O.x, 0, O.z], 12); C.room.lamp.intensity = 0; C.hemi.intensity = 0.35 + seg(t, 0.4, 1.4) * 0.5;
+      C.room.winP.material.color.setRGB(1 + seg(t, 0.4, 1.4) * 4, 1 + seg(t, 0.4, 1.4) * 3, 1 + seg(t, 0.4, 1.4) * 2);
+      const m = C.show(C.cast.mike, BED[0], BED[1] + 1.0, 0, 1.0); m.body.rotation.x = -0.15; m.legL.rotation.x = m.legR.rotation.x = -PI / 2 + 0.15; m.face('crazy');
+      m.armR.rotation.x = -1.4; m.armR.rotation.z = 0.35; C.phoneScr.draw('dance', t + 9); C.hold(m, C.props.phone, 'R', -0.05, 0.05, 0.1, -PI / 2, PI, 0);
+      const hp = C.headPos(m); C.fill.intensity = 6; C.fill.color.set('#7affc8'); C.fill.position.set(hp.x, hp.y, hp.z + 0.8);
+      C.cam([hp.x + 0.6, hp.y + 0.15, hp.z + 1.8], [hp.x, hp.y - 0.05, hp.z], 44);
+      const n = t < 0.4 ? 10 : Math.min(300, Math.round(10 + 290 * easeOut(seg(t, 0.4, 0.8))));
+      C.ov.counter = { n, k: 1 };
     } },
-  // 25 — he paused the video
-  { id: 25, dur: 2.2, text: 'Rajesh *paused* the video.', music: 'silence', sfx: [{ t: 0.6, n: 'tap' }],
-    frame(C, t, d) { phoneClose(C, t > 0.6 ? 'paused' : 'feed', t); } },
-  // 26 — for the first time in his life... he got a job
-  { id: 26, dur: 3.8, text: 'And for the first time in his life… He actually *got a job.*', music: 'tension', sfx: [{ t: 3.05, n: 'ding' }, { t: 3.1, n: 'bass' }],
+  // 20 — by sunrise: every trend, dance, slang word
+  { id: 20, dur: 6.27, text: 'By sunrise, Michael knew every trend, every dance, and every slang word on the internet.', music: 'groove2', sfx: [{ t: 2.2, n: 'stamp' }, { t: 3.32, n: 'stamp' }, { t: 4.55, n: 'stamp' }, { t: 5.4, n: 'stamp' }],
     frame(C, t, d) {
-      if (t < 3.0) {
-        night(C);
-        const m = C.show(C.cast.rj, CHAIR[0], CHAIR[1] + 0.15, PI, 0); m.sit(1.27); m.face(t > 2.1 ? 'shock' : 'blank'); m.armR.rotation.x = -1.5; m.armR.rotation.z = 0.35;
-        C.phoneScr.draw('paused', t); C.hold(m, C.props.phone, 'R', -0.05, 0.05, 0.1, -PI / 2, PI, 0);
-        const hp = C.headPos(m); C.camLerp(easeInOut(t / 3.0), [hp.x + 0.4, hp.y, hp.z - 2.4, hp.x, hp.y, hp.z, 48], [hp.x + 0.1, hp.y, hp.z - 1.4, hp.x, hp.y, hp.z, 44]);
-      } else phoneClose(C, 'job', t - 3.0);
+      C.light('sunrise', [O.x, 0, O.z], 12); C.room.winP.material.color.setRGB(6, 4.5, 3); C.room.lamp.intensity = 0;
+      const m = C.show(C.cast.mike, O.x + 0.4, O.z - 0.6, 0.2, 0);
+      const b = Math.sin(t * 9);
+      m.armL.rotation.x = -1.6 - b * 0.9; m.armR.rotation.x = -1.6 + b * 0.9; m.armL.rotation.z = -0.4; m.armR.rotation.z = 0.4;
+      m.legL.rotation.x = b * 0.3; m.legR.rotation.x = -b * 0.3; m.body.position.y = Math.abs(b) * 0.12; m.torso.rotation.z = b * 0.12;
+      m.face(t > 1.0 ? 'laugh' : 'crazy');
+      const hp = C.headPos(m);
+      C.camLerp(easeInOut(t / d), [hp.x + 0.6, hp.y - 0.6, hp.z + 4.8, hp.x, hp.y - 0.9, hp.z, 50], [hp.x + 0.3, hp.y - 0.5, hp.z + 3.8, hp.x, hp.y - 0.8, hp.z, 50]);
+      C.ov.slang = [['NO CAP', 0.27, 0.2, t - 2.2, -0.15, '#ffd23f'], ['RIZZ', 0.75, 0.27, t - 3.32, 0.12, '#39ff88'], ['BUSSIN', 0.3, 0.74, t - 4.55, 0.1, '#ff7ad9'], ['SHEESH', 0.72, 0.8, t - 5.4, -0.1, '#4dd2ff']];
     } },
-  // 27 — as a professional TikTok viewer
-  { id: 27, dur: 2.8, text: 'As a *professional TikTok viewer.*', music: 'groove2', sfx: [{ t: 0.2, n: 'whoosh' }],
+  // 21 — threw the cardigan out of the window
+  { id: 21, dur: 1.99, text: 'He threw his cardigan out the window.', sfx: [{ t: 0.3, n: 'whoosh' }, { t: 1.38, n: 'land' }],
     frame(C, t, d) {
-      day(C); C.phoneScr.draw('feed', t);
-      const m = lying(C, C.cast.rj, t, 'proud'); const hp = C.headPos(m);
-      C.cam([hp.x + 1.0, hp.y + 2.8, hp.z + 1.8], [hp.x, hp.y, hp.z + 0.5], 50);
-      C.ov.job = seg(t, 0.4, 1.0); C.ov.jobLines = 0;
+      C.light('day', [HOUSE.x, 0, HOUSE.z], 18);
+      const n = C.show(C.cast.neighbor, -6.0, HOUSE.z + 2.4, PI / 2, 0.22); n.walk(t * 6, t < 1.35 ? 1 : 0);
+      const ft = seg(t, 0.25, 1.35);
+      const start = [-12.6, 6.0, HOUSE.z], land = [-6.0, 3.05, HOUSE.z + 2.4];
+      if (t < 1.35) C.put(C.props.cardigan, lerp(start[0], land[0], ft), lerp(start[1], land[1], ft) + Math.sin(ft * PI) * 1.4, lerp(start[2], land[2], ft), ft * 3, ft * 5, ft * 2);
+      else { C.put(C.props.cardigan, land[0], land[1], land[2], 0, 0.3, 0.1); n.face('shock'); n.armL.rotation.z = -0.6; n.armR.rotation.z = 0.6; }
+      C.cam([-3.0, 2.6, HOUSE.z + 8.5], [-8.6, 3.6, HOUSE.z + 1.0], 52);
     } },
-  // 28 — salary: zero dollars, hours: 24/7
-  { id: 28, dur: 3.4, text: 'Salary: *zero dollars.* Hours: *24/7.*', sfx: [{ t: 1.08, n: 'stamp' }, { t: 3.22, n: 'stamp' }, { t: 4.4, n: 'stamp' }, { t: 4.4, n: 'bass' }],
+  // 22 — sold his slippers
+  { id: 22, dur: 1.55, text: 'He sold his slippers.', sfx: [{ t: 0.69, n: 'cash' }],
     frame(C, t, d) {
-      day(C); C.phoneScr.draw('feed', t);
-      const m = lying(C, C.cast.rj, t, 'proud'); const hp = C.headPos(m);
-      C.cam([hp.x + 1.0, hp.y + 2.8, hp.z + 1.8], [hp.x, hp.y, hp.z + 0.5], 50);
-      C.ov.job = 1; C.ov.jobLines = t > 4.4 ? 3 : t > 3.2 ? 2 : t > 1.05 ? 1 : 0;
+      living(C);
+      C.put(C.props.slip1, L.x + 3.6, 0.08, L.z - 1.6, 0, 0.2, 0); C.put(C.props.slip2, L.x + 4.05, 0.08, L.z - 1.55, 0, -0.1, 0);
+      C.cam([L.x + 3.85, 1.3, L.z - 0.3], [L.x + 3.85, 0.1, L.z - 1.6], 46);
+      C.ov.stamp = { text: 'SOLD  $2', k: seg(t, 0.69, 0.9) };
+    } },
+  // 23 — bought: black outfit, fanny pack, red cap... sunglasses
+  { id: 23, dur: 5.63, text: 'And he bought a black outfit, a fanny pack, a red cap… and sunglasses.', sfx: [{ t: 0.68, n: 'bass' }, { t: 1.87, n: 'bass' }, { t: 3.04, n: 'bass' }, { t: 4.33, n: 'bass' }],
+    frame(C, t, d) {
+      roomDay(C);
+      const B = [BED[0], 1.02, BED[1] + 0.8];
+      const items = [[C.props.outfit, 0.68, [0, 0.06, -0.9]], [C.props.fanny, 1.87, [-0.6, 0.15, 0.2]], [C.props.cap, 3.04, [0.6, 0.2, 0.2]], [C.props.shades, 4.33, [0, 0.1, 1.0]]];
+      items.forEach(([obj, at, [x, y, z]]) => { if (t < at) return; C.put(obj, B[0] + x, B[1] + y, B[2] + z, 0, 0, 0); const s = backOut(seg(t, at, at + 0.2)); obj.scale.setScalar(s * (obj === C.props.shades ? 1.6 : 1)); });
+      const focus = t < 1.87 ? 0 : t < 3.04 ? 1 : t < 4.33 ? 2 : 3;
+      const f = items[focus][2];
+      C.cam([B[0] + f[0] + 0.3, B[1] + 2.0, B[2] + f[2] + 1.6], [B[0] + f[0], B[1] + f[1], B[2] + f[2]], 48);
+      const hit = items.some(([, at]) => t > at && t < at + 0.15); C.ov.flash = hit ? 0.25 : 0;
+    } },
+  // 24 — next morning Ranjid came downstairs
+  { id: 24, dur: 3.03, text: 'The next morning, Ranjid came downstairs.', music: 'silence', sfx: [{ t: 1.2, n: 'steps' }, { t: 0.3, n: 'yawn' }],
+    frame(C, t, d) {
+      living(C);
+      const k = seg(t, 0.9, 3.0); const i = lerp(8, 0, k);
+      const r = C.show(C.cast.ranjid, L.x - 6.8, L.z + 2.6 - i * 0.6, 0, 0.4 * (i + 1)); r.walk(t * 6, 0.6); r.face(t < 1.2 ? 'sleep' : 'blank');
+      r.armR.rotation.x = t < 1.2 ? -2.6 : 0;
+      C.cam([L.x - 3.4, 3.2, L.z + 4.6], [L.x - 6.8, 2.6, L.z], 52);
+    } },
+  // 25 — and there he was
+  { id: 25, dur: 1.54, text: 'And there he was.', music: 'tension', sfx: [{ t: 0.15, n: 'aura' }],
+    frame(C, t, d) {
+      living(C); C.fill.intensity = 30; C.fill.color.set('#ffb070');
+      const m = C.show(C.cast.md0, L.x + 2.0, L.z - 2.4, -0.4, 0); m.face('smirk');
+      C.hold(m, C.props.shades, 'R', 0, -0.05, 0.1, 0, 0, 0); m.armR.rotation.x = -0.3;
+      const hp = C.headPos(m); C.fill.position.set(hp.x + 1, hp.y + 1.5, hp.z - 1.5);
+      const up = easeInOut(t / d);
+      C.cam([hp.x - 0.8, 0.5, hp.z + 3.4], [hp.x, lerp(0.4, hp.y - 0.3, up), hp.z], 50);
+    } },
+  // 26 — "Ranjid. From now on, you call me M.D."
+  { id: 26, dur: 4.13, text: '“Ranjid. From now on, you call me M.D.”', sfx: [{ t: 2.95, n: 'bass' }],
+    frame(C, t, d) {
+      living(C);
+      const m = C.show(C.cast.md0, L.x + 2.0, L.z - 2.4, -0.4, 0);
+      C.hold(m, C.props.shades, 'R', 0, -0.05, 0.1, 0, 0, 0); m.armR.rotation.x = -0.3;
+      if ((t > 0.15 && t < 0.7) || (t > 1.2 && t < 3.4)) talk(m, t, 'ktalk', 'smirk', 6); else m.face('smirk');
+      closeFace(C, m, 2.4, 0.4, 46);
+      C.ov.nameTag = seg(t, 2.91, 3.2); C.ov.nameText = ['M.D.'];
+    } },
+  // 27 — Ranjid stared at him for five seconds
+  { id: 27, dur: 3.43, text: 'Ranjid stared at him for five seconds.', music: 'silence', sfx: [{ t: 1.9, n: 'cricket' }],
+    frame(C, t, d) {
+      living(C);
+      const r = C.show(C.cast.ranjid, L.x - 0.2, L.z - 0.8, PI / 2 + 0.6, 0); r.face('blank');
+      closeFace(C, r, lerp(2.8, 2.1, t / d), 0.2, 46);
+    } },
+  // 28 — "Like... a doctor?"
+  { id: 28, dur: 2.04, text: '“Like… a doctor?”',
+    frame(C, t, d) {
+      living(C);
+      const r = C.show(C.cast.ranjid, L.x - 0.2, L.z - 0.8, PI / 2 + 0.6, 0);
+      if ((t > 0.15 && t < 0.7) || (t > 0.9 && t < 1.55)) talk(r, t, 'talk', 'confused', 6); else r.face('confused');
+      closeFace(C, r, 2.0, 0.2, 46);
+    } },
+  // 29 — "No, Ranjid. Like a legend."
+  { id: 29, dur: 2.89, text: '“No, Ranjid. Like a legend.”', sfx: [{ t: 1.68, n: 'shine' }],
+    frame(C, t, d) {
+      living(C);
+      const m = C.show(C.cast.md0, L.x + 2.0, L.z - 2.4, -0.4, 0);
+      C.hold(m, C.props.shades, 'R', 0, -0.05, 0.1, 0, 0, 0); m.armR.rotation.x = -0.3;
+      if ((t > 0.15 && t < 1.0) || (t > 1.4 && t < 2.2)) talk(m, t, 'ktalk', 'smirk', 6); else m.face('smirk');
+      closeFace(C, m, 2.1, 0.35, 46);
+    } },
+  // 30 — slowly put on his sunglasses
+  { id: 30, dur: 3.27, text: 'M.D. slowly put on his sunglasses and said:', sfx: [{ t: 2.25, n: 'zoom' }],
+    frame(C, t, d) {
+      living(C); C.fill.intensity = 24; C.fill.color.set('#ffb070');
+      const on = t > 2.25;
+      const m = C.show(on ? C.cast.md : C.cast.md0, L.x + 2.0, L.z - 2.4, -0.4, 0); m.face('smirk');
+      const lift = easeInOut(seg(t, 0.8, 2.25));
+      if (!on) { m.armR.rotation.x = lerp(-0.3, -2.6, lift); m.armR.rotation.z = lerp(0, 0.7, lift); C.hold(m, C.props.shades, 'R', 0, -0.05, 0.1, 0, 0, 0); }
+      const hp = C.headPos(m); C.fill.position.set(hp.x + 1, hp.y + 1.5, hp.z - 1.5);
+      C.camLerp(easeInOut(t / d), [hp.x - 1.4, hp.y - 0.3, hp.z + 2.9, hp.x, hp.y - 0.4, hp.z, 46], [hp.x - 0.9, hp.y - 0.1, hp.z + 2.0, hp.x, hp.y - 0.1, hp.z, 44]);
+      C.ov.flash = on ? 0.35 * (1 - seg(t, 2.25, 2.5)) : 0;
+    } },
+  // 31 — "I'm not old. I'm vintage."
+  { id: 31, dur: 2.78, text: '“I’m not old. I’m vintage.”', music: 'drop:1.6', sfx: [{ t: 1.6, n: 'bass' }, { t: 1.62, n: 'confetti' }],
+    frame(C, t, d) {
+      living(C); C.fill.intensity = 30; C.fill.color.set('#ff5a3a');
+      const m = C.show(C.cast.md, L.x + 2.0, L.z - 2.4, -0.4, 0);
+      if ((t > 0.15 && t < 0.85) || (t > 1.35 && t < 2.2)) talk(m, t, 'ktalk', 'smirk', 6); else m.face('smirk');
+      m.armL.rotation.x = -0.5; m.armL.rotation.z = 0.8; m.armR.rotation.x = -0.5; m.armR.rotation.z = -0.8;
+      const hp = C.headPos(m); C.fill.position.set(hp.x - 1.2, hp.y + 1, hp.z + 1.2);
+      C.camLerp(easeOut(seg(t, 1.55, 1.85)), [hp.x - 0.5, 0.7, hp.z + 3.2, hp.x, hp.y - 0.7, hp.z, 52], [hp.x - 0.35, 0.9, hp.z + 2.4, hp.x, hp.y - 0.5, hp.z, 50]);
+      if (t > 1.62) C.props.confetti.forEach((p) => { const [a, b, c2, e] = p.userData.seed; const lt = t - 1.62; C.put(p, hp.x + (a - 0.5) * 5, 6 - ((lt * (0.8 + b) + e * 3) % 6), hp.z + (c2 - 0.5) * 3, lt * 5 * a, lt * 3 * b, lt * 4); });
+      C.ov.flash = t > 1.6 ? 0.5 * (1 - seg(t, 1.6, 1.9)) : 0;
+      if (t > 1.6) C.ov.shakeX = noise1(t * 40, 4) * 0.03 * (1 - seg(t, 1.6, 2.4));
+    } },
+  // 32 — the whole town changed forever
+  { id: 32, dur: 3.4, text: 'And that was the day the whole town changed forever.', sfx: [{ t: 0.1, n: 'whoosh' }],
+    frame(C, t, d) {
+      C.light('day', [6, 0, 6], 22);
+      const mz = -4 + t * 2.0;
+      const m = C.show(C.cast.md, 6, mz, 0, 0.22); m.walk(t * 7); m.face('smirk');
+      C.cast.town.forEach((p, i) => {
+        const side = i % 2 ? 1 : -1; const z = -1 + Math.floor(i / 2) * 3.2;
+        C.show(p, 6 + side * 1.4 + (side > 0 ? 1.6 : -1.0), z, side > 0 ? -PI / 2 : PI / 2, side > 0 ? 0 : 0.22);
+        const look = mz > z - 3; if (look) { C.face(p, 6, mz); p.face('shock'); p.armL.rotation.x = p.armR.rotation.x = -0.5; } else { p.face('smile'); p.idle(t + i); }
+      });
+      C.camLerp(easeInOut(t / d), [12, 9, -14, 6, 1, 2, 50], [11, 6, -10, 6, 1.5, 4, 50]);
+    } },
+  // 33 — next time: M.D. goes to the gym
+  { id: 33, dur: 5.73, text: 'Next time: M.D. goes to the gym.', sfx: [{ t: 0.4, n: 'whoosh' }, { t: 1.26, n: 'bass' }],
+    frame(C, t, d) {
+      C.light('day', [6, 0, 10], 22);
+      const m = C.show(C.cast.md, 6, 4 + t * 1.2, 0, 0.22); m.walk(t * 7); m.face('smirk');
+      const hp = C.headPos(m); C.cam([hp.x + 0.6, hp.y - 0.4, hp.z + 4.0], [hp.x, hp.y - 0.6, hp.z], 50);
+      C.ov.nextEp = seg(t, 0.4, 1.2);
     } },
 ];

@@ -225,6 +225,11 @@ def fx(name):
         n = T(1.2); t = tl(n); x = np.zeros(n); x[:T(0.08)] += np.tanh(3 * lp(noise(T(0.08)), 1200)) * np.exp(-tl(T(0.08)) * 40)
         return x + hp(noise(n), 5000) * np.exp(-t * 3) * 0.25
     if name == 'cricket': return fx('crickets')
+    if name == 'pendrop':
+        out = np.zeros(T(0.6))
+        for st, g in ((0, 1), (0.12, 0.5), (0.2, 0.25)):
+            m = T(0.05); tt = tl(m); add(out, (np.sin(2 * np.pi * 2600 * tt) + hp(noise(m), 3000) * 0.5) * np.exp(-tt * 120) * g, st)
+        return out
     if name == 'stamp':
         n = T(0.35); t = tl(n); return np.tanh(3 * (lp(noise(n), 500) * np.exp(-t * 25) + np.sin(2 * np.pi * 70 * t) * np.exp(-t * 18)))
     if name == 'yawn':
@@ -262,7 +267,7 @@ FX_GAIN = {'whoosh': 0.45, 'zoom': 0.4, 'boing': 0.5, 'boing2': 0.45, 'rustle': 
            'crickets': 0.3, 'snore': 0.55, 'water': 0.35, 'salute': 0.4, 'whimper': 0.4, 'neon': 0.5, 'record': 0.6, 'land': 0.6, 'slurp': 0.7,
            'laugh': 0.6, 'crush': 0.8, 'heartbeat': 0.9, 'coo': 0.45, 'strain': 0.6, 'pop': 0.9, 'giggle': 0.5, 'tvon': 0.5, 'shine': 0.45, 'flies': 0.35, 'crunch': 0.7, 'heartfast': 0.85, 'door': 0.4, 'fan': 0.55, 'breath': 0.6,
            'slime': 0.55, 'tick': 0.5, 'phone': 0.45, 'scream': 0.7, 'siren': 0.45, 'steps': 0.6, 'pan': 0.55, 'camclick': 0.5, 'confetti': 0.6, 'cricket': 0.35, 'stamp': 0.8, 'yawn': 0.5, 'tap': 0.5, 'laughs': 0.6, 'aura': 0.55,
-           'cash': 0.6, 'click': 0.5, 'fail': 0.6, 'ding': 0.55, 'brainrot': 0.45}
+           'cash': 0.6, 'click': 0.5, 'fail': 0.6, 'ding': 0.55, 'brainrot': 0.45, 'pendrop': 0.7}
 
 # ---------------- score ----------------
 BPM = 96; BEAT = 60 / BPM; BAR = 4 * BEAT; E8 = BEAT / 2
@@ -337,7 +342,7 @@ def main(tl_path, out_path, narr_path=None):
         if m in ('intro', 'groove', 'groove2', 'club', 'soft', 'tension'): secs.append((st0, m))
         elif m in ('silence', 'stop'): secs.append((st0, 'silence'))
         elif m == 'hype': secs.append((st0, 'groove2'))
-        elif m == 'drop': secs.append((st0, 'tension')); secs.append((st0 + 1.2, 'groove2'))
+        elif m.startswith('drop'): secs.append((st0, 'tension')); secs.append((st0 + (float(m.split(':')[1]) if ':' in m else 1.2), 'groove2'))
         elif m == 'sting': secs.append((st0, 'silence')); secs.append((st0 + 1.4, 'groove2'))
     mus = score(total, secs)
     sfx = np.zeros_like(mus)

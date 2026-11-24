@@ -1,7 +1,8 @@
-import { THREE, clamp, lerp, easeOut, backOut, canvasTex, textTex, sphere, mat, rng } from './lib.js';
+import { THREE, clamp, lerp, easeOut, backOut, canvasTex, textTex, sphere, mat, rng, rbox } from './lib.js';
 import { makeChar } from './chars.js';
 import { buildTown, buildKitchen, makeSkyTextures } from './world.js';
-import { makeScreen, buildRoom, buildLiving, makeFlies, makeConfetti, makeClock, makePizzaBox } from './sets.js';
+import { makeScreen, buildLiving, makeConfetti } from './sets.js';
+import { OLDROOM, buildOldRoom, makePlant, makeBowl, makeCrossword, makePen, makeShades, makeCapItem, makeFannyItem, makeOutfitItem, makeSlipper, makeAlarm } from './sets_md.js';
 import { makePhoneScreen, makeWideScreen, makeSmartphone, makeLaptop, makeRouter, makeDiningChair, makeFries, makeBurger, makeDesk } from './screens.js';
 import { SHOTS } from './shots.js';
 import { PHRASES, STARTS, END, WORDS } from './narration.js';
@@ -44,39 +45,43 @@ async function init() {
 
   const town = buildTown(scene);
   const kitchen = buildKitchen(scene);
-  const screenRoom = makeScreen(), screenLiving = makeWideScreen();
-  const room = buildRoom(scene, screenRoom);
+  const screenLiving = makeWideScreen();
+  const room = buildOldRoom(scene);
   const living = buildLiving(scene, screenLiving);
   const phoneScr = makePhoneScreen(), laptopScr = makeWideScreen();
   const windowGlass = mat('#bfe3f7', { roughness: 0.15, metalness: 0.1 }); // shared by every town window
 
-  // ---- cast ----
-  const RJ = { skin: '#b07a52', shirt: '#8a8f9a', pants: '#3a3f4c', shoes: '#2a2a2a', hood: true, strings: '#ffffff', print: { text: 'AURA', color: '#b14dff', stroke: '#ffffff' }, hat: { type: 'hair', color: '#141010' }, stache: '#1d1410', face: { stache: '#1d1410' }, defaultFace: 'blank' };
+  // ---- cast (series bible: these looks never change) ----
+  const OLD = { skin: '#e8c4a0', stache: '#e0e0e0', face: { stache: '#e0e0e0', wrinkles: true, thickBrows: true, browColor: '#cfcfcf' } };
   const cast = {
-    rj: makeChar(RJ),
-    ceo: makeChar({ ...RJ, shirt: '#1d2233', hood: false, sleeve: '#1d2233', print: { text: 'CEO', color: '#ffd23f', stroke: '#000000' }, shoes: '#111111' }),
-    mom: makeChar({ scale: 0.93, skin: '#b07a52', shirt: '#2f7a6a', skirt: '#1f5a4e', pants: '#3a3a44', shoes: '#5a3a2a', apron: null, hat: { type: 'hair', color: '#3a3030', bun: true }, face: { lashes: true, roundGlasses: true }, defaultFace: 'angry' }),
-    cousin: makeChar({ scale: 0.82, skin: '#c08a5e', shirt: '#f2c94c', pants: '#3a5f9e', shoes: '#ffffff', hat: { type: 'cap', color: '#d9453b' }, print: { text: 'INTERN', color: '#111', stroke: '#ffffff' }, defaultFace: 'smile' }),
+    mike: makeChar({ ...OLD, face: { ...OLD.face, roundGlasses: true }, shirt: '#c8b48a', sleeve: '#c8b48a', cardigan: '#b29e74', pants: '#6a6a72', shoes: '#7a4a3a', hat: { type: 'oldhair', color: '#dedede' }, defaultFace: 'blank' }),
+    md0: makeChar({ ...OLD, shirt: '#16161a', pants: '#16161a', shoes: '#16161a', hood: true, strings: '#d9302b', fannypack: '#0c0c0e', hat: { type: 'cap', color: '#d9302b', back: true, sides: true, sideColor: '#dedede' }, defaultFace: 'smirk' }),
+    md: makeChar({ ...OLD, face: { ...OLD.face, glasses: true }, shirt: '#16161a', pants: '#16161a', shoes: '#16161a', hood: true, strings: '#d9302b', fannypack: '#0c0c0e', hat: { type: 'cap', color: '#d9302b', back: true, sides: true, sideColor: '#dedede' }, defaultFace: 'smirk' }),
+    ranjid: makeChar({ scale: 0.9, skin: '#b07a52', shirt: '#3b6bd9', pants: '#2f3540', shoes: '#ffffff', hood: true, strings: '#ffffff', hat: { type: 'messy', color: '#1a1410' }, defaultFace: 'blank' }),
+    doc: makeChar({ skin: '#f1c6a0', shirt: '#f4f6f8', sleeve: '#f4f6f8', pants: '#3b6bd9', shoes: '#ffffff', print: { text: 'DR.', color: '#3b6bd9', stroke: null }, hat: { type: 'hair', color: '#6b3e1f' }, face: { specs: true }, defaultFace: 'smile' }),
+    neighbor: makeChar({ skin: '#c68a5e', shirt: '#2fb36b', pants: '#3a3a44', hat: { type: 'cap', color: '#f2c94c' }, defaultFace: 'blank' }),
+    town: [],
   };
-  const allChars = [cast.rj, cast.ceo, cast.mom, cast.cousin];
+  const tr = rng(5); const shirts = ['#e84a5f', '#f2c94c', '#3b7dd9', '#9b59b6', '#16a085', '#ff8a3d'];
+  for (let i = 0; i < 6; i++) cast.town.push(makeChar({ skin: ['#f1c6a0', '#e8b38c', '#c68a5e', '#8d5a3b', '#f3d2b5', '#b07a52'][i], shirt: shirts[i], pants: '#3a3a44', hat: i % 2 ? { type: 'hair', color: '#1a1410' } : { type: 'cap', color: shirts[(i + 2) % 6] }, defaultFace: 'shock', scale: 0.92 + tr() * 0.15 }));
+  const allChars = [cast.mike, cast.md0, cast.md, cast.ranjid, cast.doc, cast.neighbor, ...cast.town];
   allChars.forEach((c) => scene.add(c.root));
 
   // ---- props ----
   const sprite = (tex, s = 1) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, fog: false })); sp.scale.set(s, s, 1); return sp; };
-  const auraTex = canvasTex(256, 256, (c) => { const g = c.createRadialGradient(128, 128, 20, 128, 128, 128); g.addColorStop(0, 'rgba(190,90,255,0.0)'); g.addColorStop(0.45, 'rgba(190,90,255,0.55)'); g.addColorStop(0.7, 'rgba(120,60,255,0.35)'); g.addColorStop(1, 'rgba(120,60,255,0)'); c.fillStyle = g; c.fillRect(0, 0, 256, 256); });
-  const qTex = textTex('?', { w: 128, h: 128, color: '#ffd23f', stroke: '#000', strokeW: 12, font: '900 110px Inter' });
   const props = {
-    phone: makeSmartphone(phoneScr), laptop: makeLaptop(laptopScr), router: makeRouter(), fries: makeFries(), burger: makeBurger(), desk: makeDesk(),
-    chairs: [0, 1, 2, 3, 4, 5].map(() => makeDiningChair()), clock: makeClock(), flies: makeFlies(4), confetti: makeConfetti(60),
-    aura: sprite(auraTex, 5), qs: [0, 1, 2].map(() => sprite(qTex, 0.6)), pizza: makePizzaBox(true),
+    phone: makeSmartphone(phoneScr), alarm: makeAlarm(), plant: makePlant(), bowl: makeBowl(), spoon: makePen(), crossword: makeCrossword(), pen: makePen(),
+    shades: makeShades(), cap: makeCapItem(), fanny: makeFannyItem(), outfit: makeOutfitItem(), slip1: makeSlipper(), slip2: makeSlipper(),
+    cardigan: rbox(1.1, 0.12, 0.9, 0.06, mat('#c8b48a')), confetti: makeConfetti(60),
+    zs: [0, 1, 2].map(() => sprite(textTex('Z', { w: 128, h: 128, color: '#ffffff', stroke: '#3d63a8', strokeW: 14, font: '900 110px Inter' }), 0.4)),
   };
-  const propList = [props.phone, props.laptop, props.router, props.fries, props.burger, props.desk, ...props.chairs, props.clock, ...props.flies, ...props.confetti, props.aura, ...props.qs, props.pizza];
+  const propList = [props.phone, props.alarm, props.plant, props.bowl, props.spoon, props.crossword, props.pen, props.shades, props.cap, props.fanny, props.outfit, props.slip1, props.slip2, props.cardigan, ...props.confetti, ...props.zs];
   propList.forEach((p) => scene.add(p));
   const lampLight = new THREE.PointLight('#ffe6a8', 0, 18, 1.4); scene.add(lampLight);
 
   // ---- context for shots ----
   const C = {
-    THREE, scene, camera, cast, props, kitchen, room, living, town, lampLight, fill, screenRoom, screenLiving, phoneScr, laptopScr, windowGlass, hemi, sun,
+    THREE, scene, camera, cast, props, kitchen, room, living, town, lampLight, fill, screenLiving, phoneScr, laptopScr, windowGlass, hemi, sun, OLDROOM,
     ov: {},
     cam(p, l, fov = 50, roll = 0) {
       camera.position.set(p[0], p[1], p[2]); camera.up.set(0, 1, 0); camera.lookAt(l[0], l[1], l[2]);
@@ -134,15 +139,14 @@ async function init() {
   function resetAll() {
     allChars.forEach((c) => { c.reset(); c.root.visible = false; c.root.scale.setScalar(c.cfg.scale || 1); });
     propList.forEach((p) => { if (!p.parent) scene.add(p); p.visible = false; p.scale.set(1, 1, 1); p.rotation.set(0, 0, 0); });
-    props.aura.scale.set(5, 5, 1); props.qs.forEach((q) => q.scale.set(0.6, 0.6, 1));
-    room.door.rotation.set(0, 0, 0); room.tv.userData.light.intensity = 0; living.tv.userData.light.intensity = 0; living.ceil.intensity = 0;
+    props.zs.forEach((z) => z.scale.set(0.4, 0.4, 1)); props.plant.userData.stems.forEach((st) => { st.rotation.z = 0.25; });
+    living.tv.userData.light.intensity = 0; living.ceil.intensity = 0; room.lamp.intensity = 12;
     room.winP.material.color.set('#ffffff');
-    screenRoom.draw('off', 0); screenLiving.draw('off', 0); phoneScr.draw('off', 0); laptopScr.draw('off', 0);
+    screenLiving.draw('off', 0); phoneScr.draw('off', 0); laptopScr.draw('off', 0);
     windowGlass.emissive.set('#000000'); windowGlass.emissiveIntensity = 0;
-    fill.color.set('#ffffff'); room.lamp.color.set('#b14dff');
-    lampLight.intensity = 0;
+    lampLight.intensity = 0; fill.color.set('#ffffff');
     town.clouds.visible = true;
-    C.ov = { nameTag: 0, nameText: '', vignette: 0.25, flash: 0, shakeX: 0, shakeY: 0, heart: 0, rec: 0, recT: 0, gray: 0, stamp: null, card: null, job: 0 };
+    C.ov = { nameTag: 0, nameText: '', vignette: 0.25, flash: 0, shakeX: 0, shakeY: 0, gray: 0, stamp: null, card: null, counter: null, slang: null, nextEp: 0 };
   }
 
   // ---- timeline ----
@@ -333,6 +337,28 @@ async function init() {
       if (ov.jobLines > 0) { ctx.fillStyle = '#555'; ctx.fillText('Salary:', -340, 70); ctx.fillStyle = '#e8322b'; ctx.fillText('$0.00', 60, 70); }
       if (ov.jobLines > 1) { ctx.fillStyle = '#555'; ctx.fillText('Hours:', -340, 160); ctx.fillStyle = '#e8322b'; ctx.fillText('24/7', 60, 160); }
       if (ov.jobLines > 2) { ctx.save(); ctx.translate(200, 250); ctx.rotate(-0.25); ctx.strokeStyle = '#1faa4a'; ctx.lineWidth = 10; ctx.strokeRect(-150, -55, 300, 110); ctx.fillStyle = '#1faa4a'; ctx.textAlign = 'center'; ctx.font = '900 64px Inter'; ctx.fillText('HIRED', 0, 4); ctx.restore(); }
+      ctx.restore();
+    }
+    if (ov.counter) { // videos watched counter
+      const k = backOut(clamp(ov.counter.k * 3));
+      ctx.save(); ctx.translate(W / 2, H * 0.2); ctx.scale(k, k);
+      ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.beginPath(); ctx.roundRect(-380, -120, 760, 240, 34); ctx.fill();
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = '800 44px Inter'; ctx.fillStyle = '#ffffff'; ctx.fillText('VIDEOS WATCHED', 0, -62);
+      ovText(String(ov.counter.n), 0, 34, 150, '#ffd23f');
+      ctx.restore();
+    }
+    if (ov.slang) { // slang words popping around the screen
+      ov.slang.forEach(([word, x, y, k, rot, col]) => { if (k <= 0) return; const s2 = backOut(clamp(k * 3)); ctx.save(); ctx.translate(x * W, y * H); ctx.rotate(rot); ctx.scale(s2, s2); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ovText(word, 0, 0, 84, col); ctx.restore(); });
+    }
+    if (ov.nextEp > 0) {
+      const k = easeOut(clamp(ov.nextEp * 2.5));
+      ctx.fillStyle = `rgba(10,10,14,${0.82 * k})`; ctx.fillRect(0, 0, W, H);
+      ctx.save(); ctx.translate(W / 2, lerp(H * 0.62, H * 0.5, k)); ctx.globalAlpha = k; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#d9302b'; ctx.beginPath(); ctx.roundRect(-300, -330, 600, 110, 22); ctx.fill();
+      ctx.font = '900 64px Inter'; ctx.fillStyle = '#fff'; ctx.fillText('NEXT EPISODE', 0, -272);
+      ovText('M.D.', 0, -80, 210, '#ffffff'); ovText('GOES TO', 0, 90, 110, '#ffd23f'); ovText('THE GYM', 0, 210, 140, '#ffd23f');
+      ctx.font = '800 46px Inter'; ctx.fillStyle = '#ffffff'; ctx.fillText('FOLLOW SO YOU DON’T MISS IT', 0, 360);
       ctx.restore();
     }
     if (ov.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${ov.flash})`; ctx.fillRect(0, 0, W, H); }

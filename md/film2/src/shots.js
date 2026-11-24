@@ -128,15 +128,16 @@ export const SHOTS = [
       C.hold(m, C.props.db6, 'L', 0, -0.05, 0.05); C.hold(m, C.props.db7, 'R', 0, -0.05, 0.05);
       closeFace(C, m, 3.0, 0.8, 50, -0.5);
     } },
-  { id: 14, dur: 2.0, text: '“*Six… seven!*”', sfx: [{ t: 0.15, n: 'bass' }, { t: 1.06, n: 'bass' }], wins: [[0.15, 0.75], [1.06, 1.7]],
+  { id: 14, dur: 2.0, text: '“*Six… sevennnn!*”', sfx: [{ t: 0.15, n: 'bass' }, { t: 1.06, n: 'bass' }, { t: 1.1, n: 'zoom' }], wins: [[0.15, 0.75], [1.06, 2.65]],
     frame(C, t, d) {
       gymLight(C); aura(C, 1000);
       const m = C.show(C.cast.md, RACK[0], RACK[1] + 1.0, PI, 0);
-      const s = Math.sin(t * 10); m.armL.rotation.x = -1.4 + s * 0.6; m.armR.rotation.x = -1.4 - s * 0.6;
+      const s = Math.sin(t * 10); const up7 = easeOut(seg(t, 1.06, 1.5));
+      m.armL.rotation.x = t < 1.06 ? -1.4 + s * 0.6 : -1.2; m.armR.rotation.x = t < 1.06 ? -1.4 - s * 0.6 : lerp(-1.4, -3.0, up7) + Math.sin(t * 40) * 0.05 * up7;
       C.hold(m, C.props.db6, 'L', 0, -0.05, 0.05); C.hold(m, C.props.db7, 'R', 0, -0.05, 0.05);
       talkIn(m, t, this.wins, 'scream', 'smirk');
-      closeFace(C, m, 2.6, 0.2, 48, -0.3);
-      C.ov.shakeX = noise1(t * 30, 3) * 0.015;
+      closeFace(C, m, lerp(2.6, 1.9, easeInOut(seg(t, 1.06, 2.7))), 0.2, 48, -0.3);
+      C.ov.shakeX = noise1(t * 30, 3) * (t > 1.06 ? 0.03 : 0.015);
     } },
   { id: 15, dur: 1.6, text: 'The whole gym *stopped.*', music: 'silence', sfx: [{ t: 0.8, n: 'record' }],
     frame(C, t, d) {
@@ -172,40 +173,23 @@ export const SHOTS = [
       C.cam([TM[0] + 3.0, 2.2, TM[1] + 1.2], [TM[0], 1.6, TM[1]], 50);
       C.ov.slang = [['HUSS', 0.5, 0.72, t - this.at, -0.08, '#ffffff']];
     } },
-  { id: 20, dur: 2.2, text: 'Speed *five.* *Huss. Huss.*', sfx: [{ t: 0.5, n: 'tap' }, { t: 1.38, n: 'huss' }, { t: 2.13, n: 'huss' }],
+  { id: 20, dur: 2.2, text: 'Speed *five.* *Huss. Huss.*', sfx: [{ t: 0.5, n: 'tap' }, { t: 1.37, n: 'huss' }, { t: 1.85, n: 'huss' }],
     frame(C, t, d) {
       gymLight(C); aura(C, 6000);
       const m = treadmillRun(C, t, 5, d);
       const hq = C.headPos(m); C.cam([hq.x + 3.4, hq.y + 0.3, hq.z - 2.2], [hq.x, hq.y - 0.6, hq.z], 50);
-      C.ov.slang = [['HUSS', 0.3, 0.7, t - 1.38, -0.1, '#ffffff'], ['HUSS', 0.7, 0.76, t - 2.13, 0.1, '#ffd23f']];
+      C.ov.slang = [['HUSS', 0.3, 0.7, t - 1.37, -0.1, '#ffffff'], ['HUSS', 0.7, 0.76, t - 1.85, 0.1, '#ffd23f']];
     } },
-  { id: 21, dur: 2.8, text: 'Speed *ten.* *Huss. Huss. Huss.*', sfx: [{ t: 0.58, n: 'tap' }, { t: 1.32, n: 'huss' }, { t: 1.99, n: 'huss' }, { t: 2.61, n: 'huss' }],
+  { id: 21, dur: 2.8, text: 'Speed *ten.* *Huss. Huss. Huss.*', sfx: [{ t: 0.59, n: 'tap' }, { t: 1.33, n: 'huss' }, { t: 1.72, n: 'huss' }, { t: 2.22, n: 'huss' }],
     frame(C, t, d) {
       gymLight(C); aura(C, 6000);
       const m = treadmillRun(C, t, 10, d);
       const hp = C.headPos(m);
       C.props.drops.forEach((dr, i) => { const p = ((t * 2 + i / 10) % 1); C.put(dr, hp.x + Math.sin(i * 2.4) * (0.4 + p), hp.y + 0.2 + p * 0.5 - p * p, hp.z + Math.cos(i * 2.4) * (0.3 + p)); });
       C.cam([hp.x + 3.0 + noise1(t * 20, 1) * 0.04, hp.y + 0.4, hp.z - 2.0], [hp.x, hp.y - 0.5, hp.z], 50);
-      C.ov.slang = [['HUSS', 0.25, 0.68, t - 1.32, -0.12, '#ffffff'], ['HUSS', 0.72, 0.74, t - 1.99, 0.1, '#ffd23f'], ['HUSS', 0.5, 0.84, t - 2.61, -0.04, '#ff5a5a']];
+      C.ov.slang = [['HUSS', 0.25, 0.68, t - 1.33, -0.12, '#ffffff'], ['HUSS', 0.72, 0.74, t - 1.72, 0.1, '#ffd23f'], ['HUSS', 0.5, 0.84, t - 2.22, -0.04, '#ff5a5a']];
     } },
-  // 21b — the meme beat: everybody in the gym copies him, one by one: HUSS!
-  { id: 99, dur: 2.5, text: '', meme: true, music: 'silence', sfx: [{ t: 0.02, n: 'hussShout' }, { t: 0.52, n: 'hussShout' }, { t: 1.02, n: 'hussShout' }, { t: 1.52, n: 'hussShout' }, { t: 2.02, n: 'hussShout' }],
-    frame(C, t, d) {
-      gymLight(C); aura(C, 6000);
-      const i = Math.min(4, Math.floor(t / 0.5)); const lt = t - i * 0.5;
-      const who = [C.cast.gymmers[0], C.cast.gymmers[1], C.cast.gymmers[2], C.cast.gymmers[3], C.cast.bro][i];
-      const spots = [[G.x + 3.0, G.z + 0.5, 0.4], [G.x - 2.5, G.z - 2.0, -0.5], [G.x + 5.0, G.z - 3.0, 0.2], [G.x - 4.0, G.z + 3.0, -0.3], [G.x + 1.0, G.z + 4.5, 0.1]][i];
-      const p = C.show(who, spots[0], spots[1], spots[2], 0);
-      p.face(lt < 0.38 ? 'scream' : 'blank');
-      const pump = Math.sin(seg(lt, 0, 0.3) * PI);
-      p.armL.rotation.x = p.armR.rotation.x = -0.4 - pump * 0.9; p.body.position.y = pump * 0.12;
-      if (i === 1) { const ball = C.props.ball; const hand = new C.THREE.Vector3(); p.armR.rotation.x = -0.6; p.armR.userData.hand.getWorldPosition(hand); C.put(ball, hand.x, 0.3 + Math.abs(Math.sin(lt * 9)) * (hand.y - 0.6), hand.z + 0.2, lt * 4, 0, 0); }
-      const hp = C.headPos(p); const a = p.root.rotation.y; const dist = 3.0 - lt * 0.8;
-      C.cam([hp.x + Math.sin(a) * dist + 0.15, hp.y - 0.5, hp.z + Math.cos(a) * dist], [hp.x, hp.y - 0.55, hp.z], 52, (i % 2 ? 1 : -1) * 0.06);
-      C.ov.slang = [['HUSS!', 0.5, 0.62, lt * 1.6, (i % 2 ? 1 : -1) * 0.05, '#ffffff', 190]];
-      C.ov.shakeX = noise1(t * 40, i) * 0.02 * (1 - seg(lt, 0, 0.3));
-    } },
-  { id: 22, dur: 3.0, text: 'The gym bro was so shocked, he dropped his *protein shake.*', music: 'groove', sfx: [{ t: 2.35, n: 'splash' }],
+  { id: 22, dur: 3.0, text: 'The gym bro was so shocked, he dropped his *protein shake.*', sfx: [{ t: 2.35, n: 'splash' }],
     frame(C, t, d) {
       gymLight(C); aura(C, 6000);
       treadmillRun(C, t, 10, d);

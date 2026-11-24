@@ -428,7 +428,20 @@ async function init() {
     T.width = tw; T.height = th; const c = T.getContext('2d');
     const shots = {};
     for (const w of ['old', 'new']) { portrait(w); const tmp = document.createElement('canvas'); tmp.width = W; tmp.height = H; tmp.getContext('2d').drawImage(glCanvas, 0, 0); shots[w] = tmp; }
-    if (kind === 'wide') {
+    if (kind === 'tiktok') {
+      // everything important inside the centre 3:4 area (y 240..1680) that TikTok shows in the profile grid
+      c.fillStyle = '#111114'; c.fillRect(0, 0, tw, th);
+      const y0 = 240, hh = 720;
+      c.filter = 'grayscale(0.85) brightness(0.9)'; c.drawImage(shots.old, 0, H * 0.2, W, H * 0.375, 0, y0, tw, hh); c.filter = 'none';
+      c.drawImage(shots.new, 0, H * 0.2, W, H * 0.375, 0, y0 + hh, tw, hh);
+      c.fillStyle = '#111114'; c.fillRect(0, 0, tw, y0); c.fillRect(0, y0 + 2 * hh, tw, th - y0 - 2 * hh);
+      c.save(); c.translate(tw / 2, y0 + hh); c.rotate(-0.05); c.fillStyle = '#000'; c.fillRect(-800, -12, 1600, 24); c.restore();
+      banner(c, 'BEFORE', 210, y0 + 80, 0, 56, -0.06, '#555'); banner(c, 'AFTER', 880, y0 + hh + 80, 0, 60, 0.06);
+      bigText(c, '82 YEARS OLD', tw / 2, y0 + hh - 110, 104, '#ffd23f', -0.05);
+      bigText(c, 'FOUND TIKTOK', tw / 2, y0 + 2 * hh - 110, 112, '#ffffff', -0.03);
+      bigText(c, 'EP. 1', 140, y0 + hh + 80, 66, '#ffd23f', -0.08);
+      bigText(c, 'M.D.', tw / 2, 130, 110, '#d9302b'); bigText(c, 'THE SERIES', tw / 2, th - 130, 80, '#ffffff');
+    } else if (kind === 'wide') {
       // left: old (desaturated), right: new
       c.filter = 'grayscale(0.85) brightness(0.9)'; c.drawImage(shots.old, 0, H * 0.18, W, W * 720 / 640, 0, 0, 640, 720 * 1.0); c.filter = 'none';
       c.drawImage(shots.new, 0, H * 0.18, W, W * 720 / 640, 640, 0, 640, 720);

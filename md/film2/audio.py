@@ -225,6 +225,11 @@ def fx(name):
         n = T(1.2); t = tl(n); x = np.zeros(n); x[:T(0.08)] += np.tanh(3 * lp(noise(T(0.08)), 1200)) * np.exp(-tl(T(0.08)) * 40)
         return x + hp(noise(n), 5000) * np.exp(-t * 3) * 0.25
     if name == 'cricket': return fx('crickets')
+    if name == 'hussShout':
+        n = T(0.42); t = tl(n); f = 190 * (1 + 0.25 * np.exp(-t * 8)); ph = 2 * np.pi * np.cumsum(f) / SR
+        voiced = sum(np.sin(k * ph) / k for k in range(1, 10)) * np.exp(-t * 6) * (t < 0.18)
+        hiss = bp(noise(n), 2500, 8000) * np.minimum(1, np.maximum(0, (t - 0.1) / 0.04)) * np.exp(-np.maximum(0, t - 0.14) * 9)
+        return np.tanh(2 * (bp(voiced, 300, 3000) * 0.8 + hiss * 0.9))
     if name == 'huss':
         n = T(0.38); t = tl(n); e = np.minimum(1, t / 0.03) * np.exp(-t * 7)
         return (bp(noise(n), 2500, 7500) * 0.9 + bp(noise(n), 600, 1600) * 0.4) * e
@@ -280,7 +285,7 @@ FX_GAIN = {'whoosh': 0.45, 'zoom': 0.4, 'boing': 0.5, 'boing2': 0.45, 'rustle': 
            'crickets': 0.3, 'snore': 0.55, 'water': 0.35, 'salute': 0.4, 'whimper': 0.4, 'neon': 0.5, 'record': 0.6, 'land': 0.6, 'slurp': 0.7,
            'laugh': 0.6, 'crush': 0.8, 'heartbeat': 0.9, 'coo': 0.45, 'strain': 0.6, 'pop': 0.9, 'giggle': 0.5, 'tvon': 0.5, 'shine': 0.45, 'flies': 0.35, 'crunch': 0.7, 'heartfast': 0.85, 'door': 0.4, 'fan': 0.55, 'breath': 0.6,
            'slime': 0.55, 'tick': 0.5, 'phone': 0.45, 'scream': 0.7, 'siren': 0.45, 'steps': 0.6, 'pan': 0.55, 'camclick': 0.5, 'confetti': 0.6, 'cricket': 0.35, 'stamp': 0.8, 'yawn': 0.5, 'tap': 0.5, 'laughs': 0.6, 'aura': 0.55,
-           'cash': 0.6, 'click': 0.5, 'fail': 0.6, 'ding': 0.55, 'brainrot': 0.45, 'pendrop': 0.7, 'huss': 0.8, 'splash': 0.6, 'crack': 0.95}
+           'cash': 0.6, 'click': 0.5, 'fail': 0.6, 'ding': 0.55, 'brainrot': 0.45, 'pendrop': 0.7, 'huss': 0.8, 'hussShout': 0.9, 'splash': 0.6, 'crack': 0.95}
 
 # ---------------- score ----------------
 BPM = 96; BEAT = 60 / BPM; BAR = 4 * BEAT; E8 = BEAT / 2

@@ -188,6 +188,23 @@ export const SHOTS = [
       C.cam([hp.x + 3.0 + noise1(t * 20, 1) * 0.04, hp.y + 0.4, hp.z - 2.0], [hp.x, hp.y - 0.5, hp.z], 50);
       C.ov.slang = [['HUSS', 0.25, 0.68, t - 1.0, -0.12, '#ffffff'], ['HUSS', 0.72, 0.74, t - 1.5, 0.1, '#ffd23f'], ['HUSS', 0.5, 0.84, t - 2.0, -0.04, '#ff5a5a']];
     } },
+  // 21b — the meme beat: everybody in the gym copies him, one by one: HUSS!
+  { id: 99, dur: 2.5, text: '', meme: true, sfx: [{ t: 0.02, n: 'hussShout' }, { t: 0.52, n: 'hussShout' }, { t: 1.02, n: 'hussShout' }, { t: 1.52, n: 'hussShout' }, { t: 2.02, n: 'hussShout' }],
+    frame(C, t, d) {
+      gymLight(C); aura(C, 6000);
+      const i = Math.min(4, Math.floor(t / 0.5)); const lt = t - i * 0.5;
+      const who = [C.cast.gymmers[0], C.cast.gymmers[1], C.cast.gymmers[2], C.cast.gymmers[3], C.cast.bro][i];
+      const spots = [[G.x + 3.0, G.z + 0.5, 0.4], [G.x - 2.5, G.z - 2.0, -0.5], [G.x + 5.0, G.z - 3.0, 0.2], [G.x - 4.0, G.z + 3.0, -0.3], [G.x + 1.0, G.z + 4.5, 0.1]][i];
+      const p = C.show(who, spots[0], spots[1], spots[2], 0);
+      p.face(lt < 0.38 ? 'scream' : 'blank');
+      const pump = Math.sin(seg(lt, 0, 0.3) * PI);
+      p.armL.rotation.x = p.armR.rotation.x = -0.4 - pump * 0.9; p.body.position.y = pump * 0.12;
+      if (i === 1) { const ball = C.props.ball; const hand = new C.THREE.Vector3(); p.armR.rotation.x = -0.6; p.armR.userData.hand.getWorldPosition(hand); C.put(ball, hand.x, 0.3 + Math.abs(Math.sin(lt * 9)) * (hand.y - 0.6), hand.z + 0.2, lt * 4, 0, 0); }
+      const hp = C.headPos(p); const a = p.root.rotation.y; const dist = 3.0 - lt * 0.8;
+      C.cam([hp.x + Math.sin(a) * dist + 0.15, hp.y - 0.5, hp.z + Math.cos(a) * dist], [hp.x, hp.y - 0.55, hp.z], 52, (i % 2 ? 1 : -1) * 0.06);
+      C.ov.slang = [['HUSS!', 0.5, 0.62, lt * 1.6, (i % 2 ? 1 : -1) * 0.05, '#ffffff', 190]];
+      C.ov.shakeX = noise1(t * 40, i) * 0.02 * (1 - seg(lt, 0, 0.3));
+    } },
   { id: 22, dur: 3.0, text: 'The gym bro was so shocked, he dropped his *protein shake.*', sfx: [{ t: 2.2, n: 'splash' }],
     frame(C, t, d) {
       gymLight(C); aura(C, 6000);

@@ -72,9 +72,10 @@ async function init() {
   const sprite = (tex, s = 1) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, fog: false })); sp.scale.set(s, s, 1); return sp; };
   const props = {
     shades: makeShades(), db6: makeDumbbell('6', '#3b6bd9'), db7: makeDumbbell('7', '#d9302b'), shaker: makeShaker(), bottle: makeBottle(),
+    ball: (() => { const g = new THREE.Group(); g.add(sphere(0.26, mat('#e8731f', { roughness: 0.7 }), 0, 0, 0, 20, 14)); for (const r of [0, Math.PI / 2]) { const ring = new THREE.Mesh(new THREE.TorusGeometry(0.262, 0.012, 6, 32), mat('#1a1a1a')); ring.rotation.y = r; g.add(ring); } const eq = new THREE.Mesh(new THREE.TorusGeometry(0.262, 0.012, 6, 32), mat('#1a1a1a')); eq.rotation.x = Math.PI / 2; g.add(eq); return g; })(),
     confetti: makeConfetti(60), drops: Array.from({ length: 10 }, () => sphere(0.05, mat('#7fd4ff', { roughness: 0.1 }), 0, 0, 0, 8, 6)),
   };
-  const propList = [props.shades, props.db6, props.db7, props.shaker, props.bottle, ...props.confetti, ...props.drops];
+  const propList = [props.ball, props.shades, props.db6, props.db7, props.shaker, props.bottle, ...props.confetti, ...props.drops];
   propList.forEach((p) => scene.add(p));
   const lampLight = new THREE.PointLight('#ffe6a8', 0, 18, 1.4); scene.add(lampLight);
 
@@ -348,7 +349,7 @@ async function init() {
       ctx.restore();
     }
     if (ov.slang) { // slang words popping around the screen
-      ov.slang.forEach(([word, x, y, k, rot, col]) => { if (k <= 0) return; const s2 = backOut(clamp(k * 3)); ctx.save(); ctx.translate(x * W, y * H); ctx.rotate(rot); ctx.scale(s2, s2); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ovText(word, 0, 0, 84, col); ctx.restore(); });
+      ov.slang.forEach(([word, x, y, k, rot, col, size]) => { if (k <= 0) return; const s2 = backOut(clamp(k * 3)); ctx.save(); ctx.translate(x * W, y * H); ctx.rotate(rot); ctx.scale(s2, s2); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ovText(word, 0, 0, size || 84, col); ctx.restore(); });
     }
     if (ov.nextEp > 0) {
       const k = easeOut(clamp(ov.nextEp * 2.5));

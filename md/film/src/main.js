@@ -387,7 +387,67 @@ async function init() {
     timeline: timeline.map(({ id, start, dur, sfx, music }) => ({ id, start, dur, sfx: sfx || [], music: music || null })),
     render(f) { return renderFrame(f); },
     grab(q = 0.92) { return out.toDataURL('image/jpeg', q); },
+    thumb,
   };
+  // ---- thumbnail renderer ----
+  function portrait(which) {
+    resetAll();
+    const L = { x: 500, z: 0 };
+    C.light('indoorDay', [L.x, 0, L.z], 12); living.ceil.intensity = 22;
+    let ch;
+    if (which === 'old') {
+      ch = C.show(cast.mike, L.x + 2.0, L.z - 2.4, -0.4, 0); ch.face('blank'); ch.torso.rotation.x = 0.12;
+      C.hold(ch, props.crossword, 'L', 0, -0.05, 0.3, PI2 / 4.8, 0, 0); props.crossword.scale.setScalar(0.6); ch.armL.rotation.x = -1.2;
+      fill.intensity = 0;
+    } else {
+      ch = C.show(cast.md, L.x + 2.0, L.z - 2.4, -0.4, 0); ch.face('smirk');
+      ch.armL.rotation.x = -0.5; ch.armL.rotation.z = 0.8; ch.armR.rotation.x = -0.5; ch.armR.rotation.z = -0.8;
+      fill.intensity = 16; fill.color.set('#ff5a3a');
+    }
+    const hp = C.headPos(ch); fill.position.set(hp.x - 1.4, hp.y + 1.0, hp.z + 1.3);
+    const a = ch.root.rotation.y, dist = 4.6;
+    C.cam([hp.x + Math.sin(a) * dist + 0.4, hp.y - 0.1, hp.z + Math.cos(a) * dist], [hp.x, hp.y - 0.55, hp.z], 46);
+    renderer.render(scene, camera);
+  }
+  const PI2 = Math.PI * 2;
+  function banner(c, text, x, y, w, size, rot, bg = '#d9302b') {
+    c.save(); c.translate(x, y); c.rotate(rot);
+    c.font = `900 ${size}px Inter`; c.textAlign = 'center'; c.textBaseline = 'middle';
+    const tw = c.measureText(text).width + size * 0.9;
+    c.fillStyle = bg; c.beginPath(); c.roundRect(-tw / 2, -size * 0.72, tw, size * 1.44, size * 0.25); c.fill();
+    c.lineWidth = size * 0.1; c.strokeStyle = '#fff'; c.stroke();
+    c.fillStyle = '#fff'; c.fillText(text, 0, size * 0.06); c.restore();
+  }
+  function bigText(c, text, x, y, size, col, rot = 0) {
+    c.save(); c.translate(x, y); c.rotate(rot); c.font = `900 ${size}px Inter`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
+    c.lineWidth = size * 0.22; c.strokeStyle = '#000'; c.strokeText(text, 0, 0); c.fillStyle = col; c.fillText(text, 0, 0); c.restore();
+  }
+  function thumb(kind) {
+    const T = document.createElement('canvas');
+    const tw = kind === 'wide' ? 1280 : 1080, th = kind === 'wide' ? 720 : 1920;
+    T.width = tw; T.height = th; const c = T.getContext('2d');
+    const shots = {};
+    for (const w of ['old', 'new']) { portrait(w); const tmp = document.createElement('canvas'); tmp.width = W; tmp.height = H; tmp.getContext('2d').drawImage(glCanvas, 0, 0); shots[w] = tmp; }
+    if (kind === 'wide') {
+      // left: old (desaturated), right: new
+      c.filter = 'grayscale(0.85) brightness(0.9)'; c.drawImage(shots.old, 0, H * 0.18, W, W * 720 / 640, 0, 0, 640, 720 * 1.0); c.filter = 'none';
+      c.drawImage(shots.new, 0, H * 0.18, W, W * 720 / 640, 640, 0, 640, 720);
+      c.fillStyle = '#000'; c.save(); c.translate(640, 360); c.rotate(0.06); c.fillRect(-8, -420, 16, 840); c.restore();
+      banner(c, 'BEFORE', 200, 70, 0, 52, -0.05, '#555'); banner(c, 'AFTER', 1080, 70, 0, 52, 0.05);
+      bigText(c, '82 YEARS OLD', 330, 560, 74, '#ffd23f', -0.04);
+      bigText(c, 'FOUND TIKTOK', 960, 560, 78, '#ffffff', 0.04);
+      bigText(c, '💀', 1190, 640, 70, '#fff');
+    } else {
+      c.filter = 'grayscale(0.85) brightness(0.9)'; c.drawImage(shots.old, 0, H * 0.18, W, H * 0.5, 0, 0, tw, th / 2); c.filter = 'none';
+      c.drawImage(shots.new, 0, H * 0.18, W, H * 0.5, 0, th / 2, tw, th / 2);
+      c.save(); c.translate(tw / 2, th / 2); c.rotate(-0.06); c.fillStyle = '#000'; c.fillRect(-800, -14, 1600, 28); c.restore();
+      banner(c, 'BEFORE', 230, 110, 0, 64, -0.06, '#555'); banner(c, 'AFTER', 860, th / 2 + 120, 0, 70, 0.06);
+      bigText(c, '82 YEARS OLD', tw / 2, th / 2 - 150, 112, '#ffd23f', -0.06);
+      bigText(c, 'FOUND TIKTOK', tw / 2, th - 250, 120, '#ffffff', -0.03);
+      bigText(c, 'EP. 1', 150, th / 2 + 120, 76, '#ffd23f', -0.08);
+    }
+    return T.toDataURL('image/png');
+  }
   window.__C = C;
   window.FILM_READY = true;
 }

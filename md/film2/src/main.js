@@ -5,6 +5,7 @@ import { makeScreen, buildLiving, makeConfetti } from './sets.js';
 import { OLDROOM, buildOldRoom, makeShades } from './sets_md.js';
 import { GYM, buildGym, makeDumbbell, makeShaker, makeBottle } from './sets_gym.js';
 import { drawStick, drawCrowdie } from './stickfigs.js';
+import { makeStick3D } from './stick3d.js';
 import { makePhoneScreen, makeWideScreen, makeSmartphone, makeLaptop, makeRouter, makeDiningChair, makeFries, makeBurger, makeDesk } from './screens.js';
 import { SHOTS } from './shots.js';
 import { PHRASES, STARTS, END, WORDS } from './narration.js';
@@ -138,6 +139,7 @@ async function init() {
   };
 
   function resetAll() {
+    if (typeof sMD !== 'undefined') { sMD.root.visible = false; sRJ.root.visible = false; }
     allChars.forEach((c) => { c.reset(); c.root.visible = false; c.root.scale.setScalar(c.cfg.scale || 1); });
     propList.forEach((p) => { if (!p.parent) scene.add(p); p.visible = false; p.scale.set(1, 1, 1); p.rotation.set(0, 0, 0); });
     gym.treadmill.userData.draw(0); gym.treadmill.userData.beltTex.offset.y = 0;
@@ -406,7 +408,7 @@ async function init() {
     timeline: timeline.map(({ id, start, dur, sfx, music }) => ({ id, start, dur, sfx: sfx || [], music: music || null })),
     render(f) { return renderFrame(f); },
     grab(q = 0.92) { return out.toDataURL('image/jpeg', q); },
-    thumb, styleTest,
+    thumb, styleTest, stick3dTest,
   };
   // ---- thumbnail renderer ----
   function portrait(which) {
@@ -479,6 +481,27 @@ async function init() {
       bigText(c, 'EP. 1', 150, th / 2 + 120, 76, '#ffd23f', -0.08);
     }
     return T.toDataURL('image/png');
+  }
+  const sMD = makeStick3D({ garment: '#1a1a1f', strings: '#d9302b', fanny: true, shades: true, stache: '#d8d8d8', sideHair: '#e2e2e2', hat: { type: 'cap-back', color: '#e0312b' }, defaultFace: 'smirk' });
+  const sRJ = makeStick3D({ garment: '#3b6bd9', strings: '#ffffff', hat: { type: 'hair', color: '#1a1410' }, defaultFace: 'smug', scale: 0.7 });
+  scene.add(sMD.root); scene.add(sRJ.root);
+  function stick3dTest() {
+    const shots = [];
+    for (const view of [0, 1]) {
+      resetAll(); sMD.reset(); sRJ.reset();
+      C.light('day', [14, 0, 26], 16);
+      sMD.place(12.6, 27.4, -0.5); sRJ.place(14.6, 26.6, -0.9);
+      sMD.armR.rotation.x = -1.3; sMD.armR.rotation.z = 0.3; sMD.armR.userData.elbow.rotation.x = -1.2; // pointing
+      sRJ.armL.rotation.z = -0.9; sRJ.armL.userData.elbow.rotation.x = -1.6; sRJ.armR.rotation.z = 0.9; sRJ.armR.userData.elbow.rotation.x = -1.6; // hands on hips
+      if (view === 1) { sMD.walk(1.2, 1); }
+      if (view === 0) C.cam([10.2, 2.4, 33.0], [13.6, 1.9, 26.8], 46); else C.cam([8.2, 2.7, 24.2], [13.4, 1.8, 27.2], 46);
+      renderer.render(scene, camera);
+      const tmp = document.createElement('canvas'); tmp.width = W; tmp.height = H; tmp.getContext('2d').drawImage(glCanvas, 0, 0); shots.push(tmp);
+    }
+    sMD.root.visible = false; sRJ.root.visible = false;
+    const T = document.createElement('canvas'); T.width = W * 2; T.height = H; const c = T.getContext('2d');
+    c.drawImage(shots[0], 0, 0); c.drawImage(shots[1], W, 0); c.fillStyle = '#000'; c.fillRect(W - 6, 0, 12, H);
+    return T.toDataURL('image/jpeg', 0.92);
   }
   function styleTest() {
     resetAll();

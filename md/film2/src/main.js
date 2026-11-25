@@ -483,7 +483,7 @@ async function init() {
   function styleTest() {
     resetAll();
     C.light('day', [16, 0, 24], 30);
-    C.cam([8.5, 1.5, 33], [17.5, 5.6, 21.5], 52);
+    C.cam([7.5, 3.6, 36], [16.5, 2.2, 22.5], 52);
     renderer.render(scene, camera);
     const T = document.createElement('canvas'); T.width = W; T.height = H; const c = T.getContext('2d');
     c.filter = 'blur(3px) saturate(1.15) brightness(1.05)'; c.drawImage(glCanvas, -20, -20, W + 40, H + 40); c.filter = 'none';

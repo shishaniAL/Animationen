@@ -4,6 +4,7 @@ import { buildTown, buildKitchen, makeSkyTextures } from './world.js';
 import { makeScreen, buildLiving, makeConfetti } from './sets.js';
 import { OLDROOM, buildOldRoom, makeShades } from './sets_md.js';
 import { GYM, buildGym, makeDumbbell, makeShaker, makeBottle } from './sets_gym.js';
+import { drawStick, drawCrowdie } from './stickfigs.js';
 import { makePhoneScreen, makeWideScreen, makeSmartphone, makeLaptop, makeRouter, makeDiningChair, makeFries, makeBurger, makeDesk } from './screens.js';
 import { SHOTS } from './shots.js';
 import { PHRASES, STARTS, END, WORDS } from './narration.js';
@@ -405,7 +406,7 @@ async function init() {
     timeline: timeline.map(({ id, start, dur, sfx, music }) => ({ id, start, dur, sfx: sfx || [], music: music || null })),
     render(f) { return renderFrame(f); },
     grab(q = 0.92) { return out.toDataURL('image/jpeg', q); },
-    thumb,
+    thumb, styleTest,
   };
   // ---- thumbnail renderer ----
   function portrait(which) {
@@ -477,6 +478,26 @@ async function init() {
       bigText(c, 'FOUND TIKTOK', tw / 2, th - 250, 120, '#ffffff', -0.03);
       bigText(c, 'EP. 1', 150, th / 2 + 120, 76, '#ffd23f', -0.08);
     }
+    return T.toDataURL('image/png');
+  }
+  function styleTest() {
+    resetAll();
+    C.light('day', [16, 0, 24], 30);
+    C.cam([8.5, 1.5, 33], [17.5, 5.6, 21.5], 52);
+    renderer.render(scene, camera);
+    const T = document.createElement('canvas'); T.width = W; T.height = H; const c = T.getContext('2d');
+    c.filter = 'blur(3px) saturate(1.15) brightness(1.05)'; c.drawImage(glCanvas, -20, -20, W + 40, H + 40); c.filter = 'none';
+    // background crowd
+    const cols = ['#e84a5f', '#9b59b6', '#3b7dd9', '#f2c94c', '#2fb36b', '#ff8a3d'];
+    [[80, 1560, 0.3], [180, 1552, 0.28], [940, 1565, 0.3], [1030, 1557, 0.28], [270, 1545, 0.26]].forEach(([x, y, s], i) => drawCrowdie(c, x, y, s, cols[i], i % 2 ? 'laugh' : 'shock'));
+    // M.D. (left) and Ranjid (right)
+    drawStick(c, { x: 330, y: 1615, s: 1.0, garment: { color: '#16161a', type: 'hoodie', strings: '#d9302b' }, hat: { type: 'cap-back', color: '#e0312b' }, sideHair: '#e2e2e2', shades: true, stache: '#d8d8d8', fanny: true, face: 'smirk', pose: { armL: [0.35, 0.5], armR: [1.2, 1.3], headTilt: -0.06 } });
+    drawStick(c, { x: 770, y: 1625, s: 0.92, garment: { color: '#3b6bd9', type: 'hoodie', strings: '#fff' }, hat: { type: 'hair', color: '#1a1410' }, face: 'smug', pose: { armL: [0.2, 0.2], armR: [0.5, 1.6], headTilt: 0.05 } });
+    // subtitle box (reference style)
+    c.font = '600 46px Inter'; const lines = ['M.D. challenged the youngest guy', 'in the park to a race. Bad idea.'];
+    const bw = Math.max(...lines.map((l) => c.measureText(l).width)) + 50;
+    c.fillStyle = 'rgba(0,0,0,0.62)'; c.beginPath(); c.roundRect(W / 2 - bw / 2, H * 0.875, bw, 140, 14); c.fill();
+    c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; lines.forEach((l, i) => c.fillText(l, W / 2, H * 0.875 + 42 + i * 58));
     return T.toDataURL('image/png');
   }
   window.__C = C;

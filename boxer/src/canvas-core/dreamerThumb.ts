@@ -1,0 +1,1 @@
+export { dreamerThumb } from "./thumbs";

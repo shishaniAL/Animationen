@@ -1,0 +1,1 @@
+export { boxerThumb } from "./thumbs";

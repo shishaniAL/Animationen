@@ -476,7 +476,10 @@ const XF = 0.32; // crossfade between scenes, seconds
 
 // ------------------------------------------------------------------ captions (the voice, word by word)
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+export let BOXER_CAPTIONS = true;
+export const setBoxerCaptions = (on: boolean) => { BOXER_CAPTIONS = on; };
 const captions = (ctx: Ctx, t: number) => {
+  if (!BOXER_CAPTIONS) return;
   const i = SEGS.findIndex((s, k) => t >= s.start - 0.15 && t < (SEGS[k + 1] ? Math.min(SEGS[k + 1].start - 0.12, s.end + 1.2) : s.end + 1.6));
   if (i < 0) return; const sg = SEGS[i];
   const a = ramp(t, sg.start - 0.15, sg.start) * (1 - ramp(t, (SEGS[i + 1] ? Math.min(SEGS[i + 1].start - 0.12, sg.end + 1.2) : sg.end + 1.6) - 0.15, SEGS[i + 1] ? Math.min(SEGS[i + 1].start - 0.12, sg.end + 1.2) : sg.end + 1.6));

@@ -147,7 +147,10 @@ export const dust = (ctx: Ctx, t: number, a = 1) => {
 };
 export type Seg = { text: string; start: number; end: number; words: [string, number, number][] };
 /** The voice's words, burned in; each lights up as it is spoken. */
+export let CAPTIONS = true;
+export const setCaptions = (on: boolean) => { CAPTIONS = on; };
 export const captions = (ctx: Ctx, t: number, SEGS: Seg[]) => {
+  if (!CAPTIONS) return;
   const endOf = (k: number) => (SEGS[k + 1] ? Math.min(SEGS[k + 1].start - 0.12, SEGS[k].end + 1.2) : SEGS[k].end + 1.6);
   const i = SEGS.findIndex((s, k) => t >= s.start - 0.15 && t < endOf(k));
   if (i < 0) return; const sg = SEGS[i];
